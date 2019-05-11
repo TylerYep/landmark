@@ -60,7 +60,7 @@ def download_image(key_url):
 def main():
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    key_url_list = parse_data(data_file)[:const.NUM_EXAMPLES]
+    key_url_list = parse_data(data_file) #[:const.NUM_EXAMPLES]
 
     # Adjust number of process regarding to your machine performance
     pool = multiprocessing.Pool(processes=100)
