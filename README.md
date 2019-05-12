@@ -4,6 +4,9 @@
 Main Challenge:
 https://www.kaggle.com/c/landmark-retrieval-2019/overview
 
+Baseline Model:
+https://www.kaggle.com/c/landmark-recognition-challenge/discussion/57919
+
 ### Step 1: Download Dataset CSV Link
 https://www.kaggle.com/c/landmark-retrieval-2019/data
 The above link contains csv files with links to all of the images for the train and test sets. Unzip the folder and put it into google-landmarks-dataset/, and then specify the number of examples you want to download in const.py. You can also manually change whether you want to download from the train or set set.
@@ -18,5 +21,5 @@ This file outputs a modified ```train-subset.csv``` file to fetch images from. Y
 ### Step 3: Download Images
 Run ``` python download-images.py ```.
 
-Hopefully this doesn't take forever. If you simply want all of the images, use the .sh file or download from a link.
+Hopefully this doesn't take forever. If you simply want all of the images, use the .sh file or download from a link on the Kaggle page.
 
