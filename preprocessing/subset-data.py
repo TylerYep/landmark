@@ -31,7 +31,7 @@ df_counts.to_csv('data/train-counts.csv')
 
 def fetch_data(df):
     df_subset = []
-    dict_counter = {}
+    dict_counter = dict.fromkeys(df, 0) #iniitialize all landmark_id counters to 0
     for row in tqdm(df.iterrows()):
         _id, url, landmark_id = row[1]
         if landmark_id in selected_index:
@@ -47,8 +47,8 @@ def fetch_data(df):
 
 # Find most occurring 500 unique images and take 10 of them
 selected_index = df_counts.iloc[:const.N_MOST_FREQUENT_ELEMS, :].index
-
 df_train = fetch_data(df)
+print (df_train)
 df_train.to_csv('data/train-subset.csv', index=False)
 
 # df = pd.read_csv('data/test.csv')
