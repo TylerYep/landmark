@@ -13,25 +13,26 @@ from tqdm import tqdm
 import os
 import const
 
-# Counting occurences
-df = pd.read_csv('data/train.csv')
-df = df.replace(to_replace='None', value=np.nan).dropna()
-df['landmark_id'] = df['landmark_id'].astype(int)
 
-c = Counter(df['landmark_id'])
-index, count = [], []
+def get_counts(df):
+    if os.path.exists('data/train-counts.csv'):
+        logging.warning('Counts already exists. Skipping download.')
+        return pd.read_csv('data/train-counts.csv')
+    c = Counter(df['landmark_id'])
+    index, count = [], []
+    for i in c.items():
+        index += [i[0]]
+        count += [i[1]]
 
-for i in c.items():
-    index += [i[0]]
-    count += [i[1]]
+    df_counts = pd.DataFrame(index=index, data=count, columns=['counts'])
+    df_counts = df_counts.sort_values('counts', ascending=False)
+    df_counts.to_csv('data/train-counts.csv')
+    return df_counts
 
-df_counts = pd.DataFrame(index=index, data=count, columns=['counts'])
-df_counts = df_counts.sort_values('counts', ascending=False)
-df_counts.to_csv('data/train-counts.csv')
 
-def fetch_data(df):
+def fetch_data(df, selected_index):
     df_subset = []
-    dict_counter = dict.fromkeys(df, 0) #iniitialize all landmark_id counters to 0
+    dict_counter = dict.fromkeys(df, 0) # iniitialize all landmark_id counters to 0
     for row in tqdm(df.iterrows()):
         _id, url, landmark_id = row[1]
         if landmark_id in selected_index:
@@ -45,12 +46,19 @@ def fetch_data(df):
             break
     return pd.DataFrame(df_subset)
 
-# Find most occurring 500 unique images and take 10 of them
-selected_index = df_counts.iloc[:const.N_MOST_FREQUENT_ELEMS, :].index
-df_train = fetch_data(df)
-print (df_train)
-df_train.to_csv('data/train-subset.csv', index=False)
 
-# df = pd.read_csv('data/test.csv')
-# df_test = fetch_data(df)
-# df_test.to_csv('data/test-subset.csv', index=False)
+if __name__ == '__main__':
+    # Counting occurences
+    df = pd.read_csv('data/train.csv')
+    df = df.replace(to_replace='None', value=np.nan).dropna()
+    df['landmark_id'] = df['landmark_id'].astype(int)
+
+    # Find most occurring 500 unique images and take 10 of them
+    df_counts = get_counts(df)
+    selected_index = df_counts.iloc[:const.N_MOST_FREQUENT_ELEMS, :].index
+    df_train = fetch_data(df, selected_index)
+    df_train.to_csv('data/train-subset.csv', index=False)
+
+    # df = pd.read_csv('data/test.csv')
+    # df_test = fetch_data(df)
+    # df_test.to_csv('data/test-subset.csv', index=False)

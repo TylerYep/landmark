@@ -60,6 +60,8 @@ def download_image(key_url):
 def main():
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
+    else:
+        logging.warning('Warning: Directory already exists - you may want to delete old imgs.')
     key_url_list = parse_data(data_file) #[:const.NUM_EXAMPLES]
 
     # Adjust number of process regarding to your machine performance
