@@ -23,3 +23,10 @@ Run ``` python download-images.py ```.
 
 Hopefully this doesn't take forever. If you simply want all of the images, use the .sh file or download from a link on the Kaggle page.
 
+
+pip install cnn_finetune
+
+## To ask TAs:
+- Do we still want data augmentation when we have too much training data?
+
+

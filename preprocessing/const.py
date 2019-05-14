@@ -1,5 +1,5 @@
 # download-images.py
-NUM_EXAMPLES = 10
+NUM_RAND_EXAMPLES = 10   # Don't use anymore (meant to take arbitrary numbers of images)
 CURRENT_FILE_SET = 'train-subset'    # Change after with test-subset
 
 # subset-data.py

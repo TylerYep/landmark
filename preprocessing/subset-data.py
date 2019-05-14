@@ -13,7 +13,6 @@ from tqdm import tqdm
 import os
 import const
 
-
 def get_counts(df):
     if os.path.exists('data/train-counts.csv'):
         logging.warning('Counts already exists. Skipping download.')

@@ -10,7 +10,7 @@ from PIL.ExifTags import TAGS, GPSTAGS
 from urllib import request
 from io import BytesIO
 
-class ImageMetaData(object):
+class ImageMetaData:
     '''
     Extract the exif data from any image. Data includes GPS coordinates,
     Focal Length, Manufacture, and more.
@@ -91,8 +91,8 @@ class ImageMetaData(object):
         return lat, lng
 
 if __name__ == '__main__':
-    train_df = pd.read_csv('../data/train.csv')
-    test_df = pd.read_csv('../data/test.csv')
+    train_df = pd.read_csv('../data/train-subset.csv')
+    # test_df = pd.read_csv('../data/test.csv')
     submission = pd.read_csv('../data/sample_submission.csv')
 
     urls = train_df[train_df['landmark_id'] == landmarkId]['url']

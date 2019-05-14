@@ -62,7 +62,7 @@ def main():
         os.mkdir(out_dir)
     else:
         logging.warning('Warning: Directory already exists - you may want to delete old imgs.')
-    key_url_list = parse_data(data_file) #[:const.NUM_EXAMPLES]
+    key_url_list = parse_data(data_file) #[:const.NUM_RAND_EXAMPLES]
 
     # Adjust number of process regarding to your machine performance
     pool = multiprocessing.Pool(processes=100)
