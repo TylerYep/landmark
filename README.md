@@ -11,6 +11,9 @@ https://www.kaggle.com/c/landmark-recognition-challenge/discussion/57919
 https://www.kaggle.com/c/landmark-retrieval-2019/data
 The above link contains csv files with links to all of the images for the train and test sets. Unzip the folder and put it into google-landmarks-dataset/, and then specify the number of examples you want to download in const.py. You can also manually change whether you want to download from the train or set set.
 
+## Step 1.5: Conda Install
+Run ``` conda env create -f ennviroment.yml ```.
+
 ### Step 2: Get Subset of Data
 Run ``` python preprocessing/subset-data.py ```.
 
