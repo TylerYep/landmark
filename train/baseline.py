@@ -31,7 +31,7 @@ def main():
 
     model = make_model('xception', num_classes=n_cat)
     x = 0
-    for param in model.parameters():
+    for param in model.parameters(): # 156
         if x > 85: break
         x += 1
         param.requires_grad = False
@@ -42,7 +42,7 @@ def main():
     model_trained = train_model(dataloaders, model, criterion, optimizer, num_epochs=3)
 
     # Save
-    torch.save(model_trained.state_dict(), 'models/pytorch/weights.h5')
+    # torch.save(model_trained.state_dict(), 'models/pytorch/weights.h5')
     print(model_trained)
 
 

@@ -19,6 +19,7 @@ n_cat = 5 # classes examining
 
 
 def load_data():
+    return pd.read_csv('data/train_info.csv')
     data_path = 'data/'
     train_path = 'data/images/train-subset/' # on macs, change backslash
     dev_path = train_path
@@ -42,34 +43,28 @@ def load_data():
     if n_cat_train != n_cat:
         warnings.warn('Warning: The training data is not compatible.')
 
-
-
+    label_encoder = LabelEncoder()
+    # one_hot_encoder = OneHotEncoder(sparse=True, n_values=n_cat)
     train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
-    train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
-    print(train_info)
-    train_info.to_csv('train_info.csv', index=None, header=True)
+    # train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
+    train_info.to_csv('data/train_info.csv', index=None, header=True)
     return train_info
 
-label_encoder = LabelEncoder()
-one_hot_encoder = OneHotEncoder(sparse=True, n_values=n_cat)
+
 
 class LandmarkDataset(data.Dataset):
 
     def __init__(self): #, data_path):
         super().__init__()
         self.dataset = load_data()
-        # self. = torch.from_numpy(dataset['filename']).long()
-        # self.y = torch.from_numpy(dataset['landmark_id']).long()
 
     def __getitem__(self, index):
         img = self.load_image(index)
-        y = self.dataset['landmark_id'].values[index]
-
-        y_l = label_encoder.transform(y[y >= 0.])
-        y_oh = np.zeros((1, n_cat))
-        y_oh[y >= 0., :] = one_hot_encoder.transform(y_l.reshape(-1,1)).todense()
-        print(y_oh)
-        return img, torch.from_numpy(y_oh).type('torch.FloatTensor')
+        y = self.dataset['label'].values[index]
+        # y_oh = np.zeros((1, n_cat))
+        # y_oh[y >= 0., :] = one_hot_encoder.transform(y_l.reshape(-1,1)).todense()
+        # y_oh = y_oh.squeeze()
+        return img, y
 
     def __len__(self):
         return self.dataset.shape[0]

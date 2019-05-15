@@ -28,7 +28,6 @@ def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
-                print(labels)
 
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
@@ -41,6 +40,7 @@ def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
                 _, preds = torch.max(outputs, 1)
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
+                print("done")
 
             epoch_loss = running_loss / len(image_datasets[phase])
             epoch_acc = running_corrects.double() / len(image_datasets[phase])
