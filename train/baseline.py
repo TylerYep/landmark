@@ -13,68 +13,41 @@ import torch
 from torchvision import datasets, models, transforms
 import torch.nn as nn
 from torch.nn import functional as F
+from torch.utils import data
 import torch.optim as optim
 
+from dataset import LandmarkDataset
 from cnn_finetune import make_model
 from train import train_model
 
-def load_data():
-    data_path = 'data/'
-    train_path = 'data/images/train-subset/' # on macs, change backslash
-    dev_path = train_path
+n_cat = 5
 
-    n_cat = 5 # classes examining
+def main():
+    train_info = LandmarkDataset()
+    dataloaders = {
+        'train': data.DataLoader(train_info, batch_size=32, shuffle=True, num_workers=4),
+        'validation': data.DataLoader(train_info, batch_size=32, shuffle=False, num_workers=4)
+    }
 
-    batch_size = 16
-    batch_size_predict = 16
-    input_shape = (299, 299)
+    model = make_model('xception', num_classes=n_cat)
+    x = 0
+    for param in model.parameters():
+        if x > 85: break
+        x += 1
+        param.requires_grad = False
 
-    train_image_files = glob.glob(train_path + '*.jpg')
-    train_image_ids = [image_file.replace('.jpg', '').replace(train_path, '') for image_file in train_image_files]
-    train_info_full = pd.read_csv(data_path + 'train-subset.csv', index_col='id')
-    train_info = train_info_full.loc[train_image_ids]
-    train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters())
 
-    # Heidi: commented out b/c our subset should not be missing any images
-    # train_info_correct = pd.read_csv('train_info_correct.csv', index_col='id')
-    # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
+    model_trained = train_model(dataloaders, model, criterion, optimizer, num_epochs=3)
 
-    n_cat_train = train_info['landmark_id'].nunique()
-    if n_cat_train != n_cat:
-        warnings.warn('Warning: The training data is not compatible.')
+    # Save
+    torch.save(model_trained.state_dict(), 'models/pytorch/weights.h5')
+    print(model_trained)
 
-    label_encoder = LabelEncoder()
-    one_hot_encoder = OneHotEncoder(sparse=True, n_values=n_cat)
 
-    train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
-    train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
-    print(train_info)
-    train_info.to_csv('train_info.csv', index=None, header=True)
-    return train_info
+main()
 
-# # TODO THESE NEED TO WORK FIRST
-# dataloaders = {
-#     'train': torch.utils.data.DataLoader(train_info, batch_size=32, shuffle=True, num_workers=4),
-#     'validation': torch.utils.data.DataLoader(train_info, batch_size=32, shuffle=False, num_workers=4)
-# }
-#
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#
-# model = make_model('xception', num_classes=n_cat)
-# x = 0
-# for param in model.parameters():
-#     if x > 85: break
-#     x += 1
-#     param.requires_grad = False
-#
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.Adam(model.parameters())
-#
-# model_trained = train_model(dataloaders, model, criterion, optimizer, num_epochs=3)
-#
-# # Save
-# torch.save(model_trained.state_dict(), 'models/pytorch/weights.h5')
-# print(model_trained)
 #
 #
 #

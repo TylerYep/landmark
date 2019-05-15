@@ -10,6 +10,8 @@ import torch.optim as optim
 
 # Train
 def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
+    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch+1, num_epochs))
         print('-' * 10)
@@ -26,6 +28,7 @@ def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
+                print(labels)
 
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
