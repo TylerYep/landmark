@@ -1,14 +1,3 @@
-import glob
-import warnings
-import cv2
-import numpy as np
-import pandas as pd
-
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-from sklearn.metrics import accuracy_score
-
-import matplotlib.pyplot as plt
-
 import torch
 from torchvision import datasets, models, transforms
 import torch.nn as nn
@@ -16,17 +5,26 @@ from torch.nn import functional as F
 from torch.utils import data
 import torch.optim as optim
 
-from dataset import LandmarkDataset
+# from dataset import LandmarkDataset
 from cnn_finetune import make_model
 from train import train_model
 
 n_cat = 5
 
 def main():
-    train_info = LandmarkDataset()
+    # train_info = LandmarkDataset()                # Unused
+    generic_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.ToPILImage(),
+        transforms.CenterCrop(size=(299, 299)),
+        # transforms.Lambda(lambda x: myimresize(x, (128, 128))),
+        transforms.ToTensor(),
+        # transforms.Normalize((0., 0., 0.), (6, 6, 6))
+    ])
+    train_info = datasets.ImageFolder(root='data/images/', transform=generic_transform)
     dataloaders = {
-        'train': data.DataLoader(train_info, batch_size=32, shuffle=True, num_workers=4),
-        'validation': data.DataLoader(train_info, batch_size=32, shuffle=False, num_workers=4)
+        'train': data.DataLoader(train_info, batch_size=4, shuffle=True, num_workers=8), # TODO 32 on gpu
+        'validation': data.DataLoader(train_info, batch_size=4, shuffle=False, num_workers=8)
     }
 
     model = make_model('xception', num_classes=n_cat)
@@ -48,12 +46,7 @@ def main():
 
 main()
 
-#
-#
-#
-#
-#
-#
+
 # # train_path = './train-highres/'
 # # non_landmark_train_path = './distractors/*/'
 # # dev_path = './dev/'
