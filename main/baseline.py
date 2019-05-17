@@ -1,10 +1,3 @@
-import glob
-import warnings
-
-import cv2
-import numpy as np
-import pandas as pd
-
 import keras
 import keras.backend as K
 
@@ -17,13 +10,10 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 from keras.callbacks import ModelCheckpoint
 
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-from sklearn.metrics import accuracy_score
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-warnings.simplefilter('ignore') # Tyler: Get rid of deprecation warnings
 
 # TRAIN
 def train():

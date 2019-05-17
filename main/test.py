@@ -1,3 +1,9 @@
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+# TODO create label encoder
 
 def validation_set():
     # Validate only on landmark images

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 import const
 
@@ -19,14 +20,14 @@ There are 5 dataframes:
 '''
 
 def load_data(path, type='train'):
-    train_info_full = pd.read_csv(data_path + 'train-subset.csv', index_col='id')
+    train_info_full = pd.read_csv(const.DATA_PATH + 'train-subset.csv', index_col='id')
 
     label_encoder = LabelEncoder()
-    one_hot_encoder = OneHotEncoder(sparse=True, n_values=N_CAT)
+    one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
     if type == 'train':
-        train_image_files = glob.glob(train_path + '*.jpg')
-        train_image_ids = [image_file.replace('.jpg', '').replace(train_path, '') \
+        train_image_files = glob.glob(const.TRAIN_PATH + '*.jpg')
+        train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') \
                                     for image_file in train_image_files]
         train_info = train_info_full.loc[train_image_ids]
         train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
@@ -36,40 +37,36 @@ def load_data(path, type='train'):
         # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
 
 
-        # non_landmark_image_files = glob.glob(non_landmark_train_path + '*.jp*g')
+        # non_landmark_image_files = glob.glob(const.NON_LANDMARK_TRAIN_PATH + '*.jp*g')
         # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
         # nlm_df['landmark_id'] = -1
-
-        label_encoder = LabelEncoder()
-        one_hot_encoder = OneHotEncoder(sparse=True, n_values=n_cat)
 
         train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
         train_info['one_hot'] = one_hot_encoder.fit_transform(
                             train_info['label'].values.reshape(-1, 1))
 
     if type == 'dev':
-        dev_image_files = glob.glob(dev_path + '*.jpg')
-        dev_image_ids = [image_file.replace('.jpg', '').replace(dev_path, '') \
+        dev_image_files = glob.glob(const.DEV_PATH + '*.jpg')
+        dev_image_ids = [image_file.replace('.jpg', '').replace(const.DEV_PATH, '') \
                             for image_file in dev_image_files]
         dev_info = train_info_full.loc[dev_image_ids]
         dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
 
-        non_landmark_dev_image_files = glob.glob(non_landmark_dev_path + '*.jpg')
-        nlm_dev_df = pd.DataFrame({'filename': non_landmark_dev_image_files})
-        nlm_dev_df['landmark_id'] = -1
+        # non_landmark_dev_image_files = glob.glob(const.NON_LANDMARK_DEV_PATH + '*.jpg')
+        # nlm_dev_df = pd.DataFrame({'filename': non_landmark_dev_image_files})
+        # nlm_dev_df['landmark_id'] = -1
 
 
         # SHOULD DO SOMETHING SIMILAR FOR DEV
-        train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
-        train_info['one_hot'] = one_hot_encoder.fit_transform(
-                            train_info['label'].values.reshape(-1, 1))
+        dev_info['label'] = label_encoder.fit_transform(dev_info['landmark_id'].values)
+        dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))
 
 
     if type == 'test':
         test_info_full = pd.read_csv('test.csv', index_col='id')
 
-        test_image_files = glob.glob(test_path + '*.jpg')
-        test_image_ids = [image_file.replace('.jpg', '').replace(test_path, '') \
+        test_image_files = glob.glob(const.TEST_PATH + '*.jpg')
+        test_image_ids = [image_file.replace('.jpg', '').replace(const.TEST_PATH, '') \
                             for image_file in test_image_files]
 
         test_info = test_info_full.loc[test_image_ids]
@@ -88,7 +85,7 @@ def print_image():
 
 # ### Image i/o and image data augmentation
 # Standard keras image augmentation is used and in addition random crops (with slighter additional augmentation) are scaled to full resolution. Since the original images have a higher resolution than this model, the crops will contain additional information.
-def load_images(info, input_shape = input_shape):
+def load_images(info, input_shape=const.INPUT_SHAPE):
     input_shape = tuple(input_shape)
     imgs = np.zeros((len(info), input_shape[0], input_shape[1], 3))
 
@@ -205,27 +202,28 @@ def get_image_gen(info_arg, shuffle=True, image_aug=True, eq_dist=False, n_ref_i
             imgs = preprocess_input(imgs)
 
             y_l = label_encoder.transform(y[y>=0.])
-            y_oh = np.zeros((len(y), n_cat))
+            y_oh = np.zeros((len(y), const.N_CAT))
             y_oh[y >= 0., :] = one_hot_encoder.transform(y_l.reshape(-1,1)).todense()
 
             yield imgs, y_oh
-if basic_version:
-    train_gen = get_image_gen(pd.concat([train_info]),
-                              eq_dist=False,
-                              n_ref_imgs=256,
-                              crop_prob=0.5,
-                              crop_p=0.5)
-else:
-    train_gen = get_image_gen(pd.concat([train_info, nlm_df]),
+
+
+    if const.BASIC:
+        x = pd.concat([train_info])
+    else:
+        x = pd.concat([train_info, nlm_df])
+
+
+    train_gen = get_image_gen(x,
                               eq_dist=False,
                               n_ref_imgs=256,
                               crop_prob=0.5,
                               crop_p=0.5)
 
 if __name__ == '__main__':
-    train_info = load_data(path, type='train')
-    dev_info = load_data(path, type='dev')
-    test_info = load_data(path, type='dev')
+    train_info = load_data(const.TRAIN_PATH, type='train')
+    dev_info = load_data(const.DEV_PATH, type='dev')
+    test_info = load_data(const.TEST_PATH, type='dev')
 
     # n_cat_train = train_info['landmark_id'].nunique()
     # if n_cat_train != n_cat:
