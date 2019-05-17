@@ -4,7 +4,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-
+import os
+from keras.preprocessing.image import ImageDataGenerator 
+from keras.applications.xception import preprocess_input
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import const
 
 '''
@@ -19,14 +22,17 @@ There are 5 dataframes:
 * test_info: test images
 '''
 
-def load_data(path, type='train'):
+def load_data(type='train'):
+    """
+    Returns pandas df of data plus encoders used (if not test)
+    """
     train_info_full = pd.read_csv(const.DATA_PATH + 'train-subset.csv', index_col='id')
 
     label_encoder = LabelEncoder()
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
     if type == 'train':
-        train_image_files = glob.glob(const.TRAIN_PATH + '*.jpg')
+        train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
         train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') \
                                     for image_file in train_image_files]
         train_info = train_info_full.loc[train_image_ids]
@@ -36,7 +42,7 @@ def load_data(path, type='train'):
         # train_info_correct = pd.read_csv('train_info_correct.csv', index_col='id')
         # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
 
-
+#         train_image_files = [train_path + file for file in os.listdir(train_path) if file.endswith('.jpg')]
         # non_landmark_image_files = glob.glob(const.NON_LANDMARK_TRAIN_PATH + '*.jp*g')
         # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
         # nlm_df['landmark_id'] = -1
@@ -44,6 +50,7 @@ def load_data(path, type='train'):
         train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
         train_info['one_hot'] = one_hot_encoder.fit_transform(
                             train_info['label'].values.reshape(-1, 1))
+        return train_info, (label_encoder, one_hot_encoder)
 
     if type == 'dev':
         dev_image_files = glob.glob(const.DEV_PATH + '*.jpg')
@@ -60,7 +67,7 @@ def load_data(path, type='train'):
         # SHOULD DO SOMETHING SIMILAR FOR DEV
         dev_info['label'] = label_encoder.fit_transform(dev_info['landmark_id'].values)
         dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))
-
+        return dev_info,(label_encoder, one_hot_encoder)
 
     if type == 'test':
         test_info_full = pd.read_csv('test.csv', index_col='id')
@@ -73,6 +80,7 @@ def load_data(path, type='train'):
         test_info['filename'] = pd.Series(test_image_files, index=test_image_ids)
 
 
+        
 
 def print_image():
     print("Landmark_id of image", train_image_files[0], ":",
@@ -104,7 +112,7 @@ def load_images(info, input_shape=const.INPUT_SHAPE):
     return imgs
 
 
-def load_cropped_images(info, crop_p=0.2, crop='random'):
+def load_cropped_images(info, crop_p=0.2, crop='random', input_shape=const.INPUT_SHAPE):
     new_res = np.array([int(input_shape[0]*(1+crop_p)), int(input_shape[1]*(1+crop_p))])
     if crop == 'random':
         cx0 = np.random.randint(new_res[0] - input_shape[0], size=len(info))
@@ -137,8 +145,9 @@ def load_cropped_images(info, crop_p=0.2, crop='random'):
 
 
 # Create the image data generator which is used for training
-def get_image_gen(info_arg, shuffle=True, image_aug=True, eq_dist=False, n_ref_imgs=16,
+def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=False, n_ref_imgs=16,
                   crop_prob=0.5, crop_p=0.5):
+    label_encoder, one_hot_encoder = encoders
     if image_aug:
         datagen = ImageDataGenerator(
             rotation_range=4.,
@@ -175,13 +184,13 @@ def get_image_gen(info_arg, shuffle=True, image_aug=True, eq_dist=False, n_ref_i
             count = 0
 
         # load images
-        for ind in range(0,len(info), batch_size):
-            count += batch_size
+        for ind in range(0,len(info), const.batch_size):
+            count += const.batch_size
 
-            y = info['landmark_id'].values[ind:(ind+batch_size)]
+            y = info['landmark_id'].values[ind:(ind+const.batch_size)]
 
             if np.random.rand() < crop_prob:
-                imgs = load_cropped_images(info.iloc[ind:(ind+batch_size)],
+                imgs = load_cropped_images(info.iloc[ind:(ind+const.batch_size)],
                                            crop_p=crop_p*np.random.rand() + 0.01,
                                            crop='random')
                 if image_aug:
@@ -191,7 +200,7 @@ def get_image_gen(info_arg, shuffle=True, image_aug=True, eq_dist=False, n_ref_i
                                               shuffle=False)
                     imgs, y = next(cflow)
             else:
-                imgs = load_images(info.iloc[ind:(ind+batch_size)])
+                imgs = load_images(info.iloc[ind:(ind+const.batch_size)])
                 if image_aug:
                     cflow = datagen.flow(imgs,
                                        y,
@@ -200,7 +209,8 @@ def get_image_gen(info_arg, shuffle=True, image_aug=True, eq_dist=False, n_ref_i
                     imgs, y = next(cflow)
 
             imgs = preprocess_input(imgs)
-
+            
+            label_encoder = LabelEncoder()
             y_l = label_encoder.transform(y[y>=0.])
             y_oh = np.zeros((len(y), const.N_CAT))
             y_oh[y >= 0., :] = one_hot_encoder.transform(y_l.reshape(-1,1)).todense()
@@ -213,12 +223,7 @@ def get_image_gen(info_arg, shuffle=True, image_aug=True, eq_dist=False, n_ref_i
     else:
         x = pd.concat([train_info, nlm_df])
 
-
-    train_gen = get_image_gen(x,
-                              eq_dist=False,
-                              n_ref_imgs=256,
-                              crop_prob=0.5,
-                              crop_p=0.5)
+    return x
 
 if __name__ == '__main__':
     train_info = load_data(const.TRAIN_PATH, type='train')

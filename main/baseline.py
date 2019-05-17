@@ -10,15 +10,17 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 from keras.callbacks import ModelCheckpoint
 
-
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import pandas as pd
 
+import dataset as d
+import const
 
 # TRAIN
 def train():
     K.clear_session()
-    x_model = Xception(input_shape=list(input_shape)+[3],
+    x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
                        weights='imagenet',
                        include_top=False)
 
@@ -45,11 +47,11 @@ def train():
     X = lambda_layer(X_feat)
     X = Dropout(0.05)(X)
     X = Activation('relu')(X)
-    X = Dense(n_cat, activation='softmax')(X)
+    X = Dense(const.N_CAT, activation='softmax')(X)
 
     top_model = Model(inputs=X_feat, outputs=X)
 
-    X_image = Input(list(input_shape) + [3])
+    X_image = Input(list(const.INPUT_SHAPE) + [3])
 
     X_f = x_model(X_image)
     X_f = top_model(X_f)
@@ -80,8 +82,14 @@ def train():
 
 
     K.set_value(model.optimizer.lr, 3e-4)
+    train_info, encoders = d.load_data(type="train")
+    train_gen = d.get_image_gen(pd.concat([train_info]), encoders,
+                              eq_dist=False, 
+                              n_ref_imgs=256, 
+                              crop_prob=0.5, 
+                              crop_p=0.5)
     model.fit_generator(train_gen,
-                        steps_per_epoch=len(train_info) / batch_size / 8,
+                        steps_per_epoch=len(train_info) / const.batch_size / 8,
                         epochs=20,
                         callbacks=[checkpoint1, checkpoint2, checkpoint3])
 
@@ -151,5 +159,9 @@ def batch_GAP(y_t, y_p):
 
 # This is just a reweighting to yield larger numbers for the loss..
 def binary_crossentropy_n_cat(y_t, y_p):
-    return keras.metrics.binary_crossentropy(y_t, y_p) * n_cat
+    return keras.metrics.binary_crossentropy(y_t, y_p) * const.N_CAT
+
+
+if __name__ == "__main__":
+    train()
 
