@@ -148,6 +148,7 @@ def load_cropped_images(info, crop_p=0.2, crop='random', input_shape=const.INPUT
 def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=False, n_ref_imgs=16,
                   crop_prob=0.5, crop_p=0.5):
     label_encoder, one_hot_encoder = encoders
+
     if image_aug:
         datagen = ImageDataGenerator(
             rotation_range=4.,
@@ -210,7 +211,7 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
 
             imgs = preprocess_input(imgs)
             
-            label_encoder = LabelEncoder()
+            
             y_l = label_encoder.transform(y[y>=0.])
             y_oh = np.zeros((len(y), const.N_CAT))
             y_oh[y >= 0., :] = one_hot_encoder.transform(y_l.reshape(-1,1)).todense()
