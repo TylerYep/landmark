@@ -15,8 +15,8 @@ n_cat = 5
 def main():
     train_info = LandmarkDataset()
     dataloaders = {
-        'train': data.DataLoader(train_info, batch_size=16, shuffle=True, num_workers=2), # TODO 32 on gpu
-        'validation': data.DataLoader(train_info, batch_size=16, shuffle=False, num_workers=2)
+        'train': data.DataLoader(train_info, batch_size=16, shuffle=True, num_workers=4), # TODO 32 on gpu
+        'validation': data.DataLoader(train_info, batch_size=16, shuffle=False, num_workers=4)
     }
 
     model = make_model('xception', num_classes=n_cat)
@@ -55,25 +55,3 @@ main()
 #
 # basic_version = True
 # if not basic_version:
-#     non_landmark_image_files = glob.glob(non_landmark_train_path + '*.jp*g')
-#     nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
-#     nlm_df['landmark_id'] = -1
-#
-#     dev_image_files = glob.glob(dev_path + '*.jpg')
-#     dev_image_ids = [image_file.replace('.jpg', '').replace(dev_path, '') \
-#                         for image_file in dev_image_files]
-#     dev_info = train_info_full.loc[dev_image_ids]
-#     dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
-#
-#     non_landmark_dev_image_files = glob.glob(non_landmark_dev_path + '*.jpg')
-#     nlm_dev_df = pd.DataFrame({'filename': non_landmark_dev_image_files})
-#     nlm_dev_df['landmark_id'] = -1
-#
-#     test_info_full = pd.read_csv('test.csv', index_col='id')
-#
-#     test_image_files = glob.glob(test_path + '*.jpg')
-#     test_image_ids = [image_file.replace('.jpg', '').replace(test_path, '') \
-#                         for image_file in test_image_files]
-#
-#     test_info = test_info_full.loc[test_image_ids]
-#     test_info['filename'] = pd.Series(test_image_files, index=test_image_ids)

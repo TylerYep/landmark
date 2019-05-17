@@ -76,7 +76,7 @@ class LandmarkDataset(data.Dataset):
                           '. Using black img instead.')
             img = np.zeros((input_shape[0], input_shape[1], 3))
 
-        img = img.reshape((3, input_shape[0], input_shape[1]))
+        img = img.permute((2, 0, 1))
         return torch.from_numpy(img).type('torch.FloatTensor')
 
     # TODO Should only load one image now
