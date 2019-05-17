@@ -11,12 +11,11 @@ import torch.optim as optim
 # Train
 def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # device = torch.device("cpu")
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch+1, num_epochs))
         print('-' * 10)
 
-        for phase in ['train', 'validation']:
+        for phase in ['train']: #, 'validation']:
             if phase == 'train':
                 model.train()
             else:
@@ -25,6 +24,7 @@ def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
             running_loss = 0.0
             running_corrects = 0
 
+            steps_per_epoch = 20
             for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -40,7 +40,11 @@ def train_model(dataloaders, model, criterion, optimizer, num_epochs=3):
                 _, preds = torch.max(outputs, 1)
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
-                print("done")
+                steps_per_epoch -= 1
+                print(steps_per_epoch, end='')
+                if steps_per_epoch == 0:
+                    print()
+                    break
 
             epoch_loss = running_loss / len(image_datasets[phase])
             epoch_acc = running_corrects.double() / len(image_datasets[phase])

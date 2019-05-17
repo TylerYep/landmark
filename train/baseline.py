@@ -5,37 +5,31 @@ from torch.nn import functional as F
 from torch.utils import data
 import torch.optim as optim
 
-# from dataset import LandmarkDataset
+from dataset import LandmarkDataset
 from cnn_finetune import make_model
 from train import train_model
+from torchsummary import summary
 
 n_cat = 5
 
 def main():
-    # train_info = LandmarkDataset()                # Unused
-    generic_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.ToPILImage(),
-        transforms.CenterCrop(size=(299, 299)),
-        # transforms.Lambda(lambda x: myimresize(x, (128, 128))),
-        transforms.ToTensor(),
-        # transforms.Normalize((0., 0., 0.), (6, 6, 6))
-    ])
-    train_info = datasets.ImageFolder(root='data/images/', transform=generic_transform)
+    train_info = LandmarkDataset()
     dataloaders = {
-        'train': data.DataLoader(train_info, batch_size=4, shuffle=True, num_workers=8), # TODO 32 on gpu
-        'validation': data.DataLoader(train_info, batch_size=4, shuffle=False, num_workers=8)
+        'train': data.DataLoader(train_info, batch_size=16, shuffle=True, num_workers=2), # TODO 32 on gpu
+        'validation': data.DataLoader(train_info, batch_size=16, shuffle=False, num_workers=2)
     }
 
     model = make_model('xception', num_classes=n_cat)
     x = 0
     for param in model.parameters(): # 156
-        if x > 85: break
+        if x > 86: break
         x += 1
         param.requires_grad = False
 
+    # summary(model, input_size=(3, 299, 299))
+
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters())
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=3e-4)
 
     model_trained = train_model(dataloaders, model, criterion, optimizer, num_epochs=3)
 
