@@ -15,25 +15,18 @@ def validation_set():
     predictions = pd.DataFrame(columns=['landmarks'], index=test_info.index)
     predictions['landmarks'] = [str(int(tp))+' '+ '%.16g' % pp
                                 for tp,pp in zip(test_pred, test_max_p)]
-    predictions.head()
 
     test_info_full = pd.read_csv('test.csv', index_col=0)
-    test_info_full.head()
-
 
     # Fill the missing values with the most common landmark
     missing = test_info_full[test_info_full.index.isin(test_info.index)!=True]
     missing_predictions = pd.DataFrame(index=missing.index)
     missing_predictions['landmarks'] = '9633 0.0'
-    missing_predictions.head()
 
     completed_predictions = pd.concat([predictions, missing_predictions])
-    print(len(completed_predictions))
 
     sorted_predictions = pd.DataFrame(index=test_info_full.index)
     sorted_predictions['landmarks'] = completed_predictions['landmarks']
-    sorted_predictions.tail()
-
 
     sorted_predictions.to_csv('prediction_c12.csv')
 
@@ -56,7 +49,6 @@ def predict(info, load_n_images=1024):
         pred[ind:(ind + load_n_images)] = label_encoder.inverse_transform(pred_i)
 
         print(ind, '/', len(info), '  -->', pred[ind], max_p[ind])
-
     print(len(info), '/', len(info), '  -->', pred[-1], max_p[-1])
 
     return pred, max_p

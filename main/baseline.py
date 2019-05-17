@@ -9,13 +9,10 @@ import keras
 import keras.backend as K
 
 from keras import Model, Sequential
-from keras.layers import Dense, Dropout, Flatten, Input, LeakyReLU
-from keras.layers import BatchNormalization, Activation, Conv2D
-from keras.layers import GlobalAveragePooling2D, Lambda
+from keras.layers import Dense, Dropout, Flatten, Input, LeakyReLU, BatchNormalization, Activation, Conv2D, GlobalAveragePooling2D, Lambda
 from keras.optimizers import Adam, RMSprop
 
-from keras.applications.xception import Xception
-from keras.applications.xception import preprocess_input
+from keras.applications.xception import Xception, preprocess_input
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 from keras.callbacks import ModelCheckpoint
@@ -113,7 +110,6 @@ def train():
     plt.plot(model.history.history['acc'])
     plt.xlabel('epoch')
     plt.ylabel('acc')
-
 
 
 # #### Custom loss function
