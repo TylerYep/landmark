@@ -24,7 +24,6 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.metrics import accuracy_score
 
 import matplotlib.pyplot as plt
-
 import tensorflow as tf
 
 warnings.simplefilter('ignore') # Tyler: Get rid of deprecation warnings
@@ -32,7 +31,6 @@ warnings.simplefilter('ignore') # Tyler: Get rid of deprecation warnings
 # TRAIN
 def train():
     K.clear_session()
-
     x_model = Xception(input_shape=list(input_shape)+[3],
                        weights='imagenet',
                        include_top=False)
@@ -148,7 +146,6 @@ def get_custom_loss(rank_weight=1., epsilon=1.e-9):
 
 
 # #### Additional metric
-#
 # The GAP is estimated by calculating it on each batch during training.
 def batch_GAP(y_t, y_p):
     pred_cat = tf.argmax(y_p, axis=-1)

@@ -6,38 +6,48 @@ import matplotlib.pyplot as plt
 
 import const
 
-# #### Data preparation
-# Most of the code lines deal with missing images and the fact that I had started with low resolution images and that the high resolution image collection had different missing images compared to the low resolution collection.
-# Basically, the following lines load the dataframes provided by kaggle, remove all missing images and add a field `filename` with a path to the downloaded jpg file.
-# There are 5 dataframes:
-# * train_info: train, landmark images
-# * nlm_df: train, non-landmark images
-# * dev_info: dev, landmark images
-# * nlm_dev_df: dev, non-landmark images
-# * test_info: test images
-
-n_cat_train = train_info['landmark_id'].nunique()
-if n_cat_train != n_cat:
-    warnings.warn('Warning: The training data is not compatible.')
-
+'''
+#### Data preparation
+Most of the code lines deal with missing images and the fact that I had started with low resolution images and that the high resolution image collection had different missing images compared to the low resolution collection.
+Basically, the following lines load the dataframes provided by kaggle, remove all missing images and add a field `filename` with a path to the downloaded jpg file.
+There are 5 dataframes:
+* train_info: train, landmark images
+* nlm_df: train, non-landmark images
+* dev_info: dev, landmark images
+* nlm_dev_df: dev, non-landmark images
+* test_info: test images
+'''
 
 def load_data(path, type='train'):
-    train_image_files = glob.glob(train_path + '*.jpg')
-    train_image_ids = [image_file.replace('.jpg', '').replace(train_path, '') \
-                                for image_file in train_image_files]
     train_info_full = pd.read_csv(data_path + 'train-subset.csv', index_col='id')
-    train_info = train_info_full.loc[train_image_ids]
-    train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
 
-    # Heidi: commented out b/c our subset should not be missing any images
-    # train_info_correct = pd.read_csv('train_info_correct.csv', index_col='id')
-    # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
+    label_encoder = LabelEncoder()
+    one_hot_encoder = OneHotEncoder(sparse=True, n_values=N_CAT)
 
-    if not basic_version:
-        non_landmark_image_files = glob.glob(non_landmark_train_path + '*.jp*g')
-        nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
-        nlm_df['landmark_id'] = -1
+    if type == 'train':
+        train_image_files = glob.glob(train_path + '*.jpg')
+        train_image_ids = [image_file.replace('.jpg', '').replace(train_path, '') \
+                                    for image_file in train_image_files]
+        train_info = train_info_full.loc[train_image_ids]
+        train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
 
+        # Heidi: commented out b/c our subset should not be missing any images
+        # train_info_correct = pd.read_csv('train_info_correct.csv', index_col='id')
+        # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
+
+
+        # non_landmark_image_files = glob.glob(non_landmark_train_path + '*.jp*g')
+        # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
+        # nlm_df['landmark_id'] = -1
+
+        label_encoder = LabelEncoder()
+        one_hot_encoder = OneHotEncoder(sparse=True, n_values=n_cat)
+
+        train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
+        train_info['one_hot'] = one_hot_encoder.fit_transform(
+                            train_info['label'].values.reshape(-1, 1))
+
+    if type == 'dev':
         dev_image_files = glob.glob(dev_path + '*.jpg')
         dev_image_ids = [image_file.replace('.jpg', '').replace(dev_path, '') \
                             for image_file in dev_image_files]
@@ -48,6 +58,14 @@ def load_data(path, type='train'):
         nlm_dev_df = pd.DataFrame({'filename': non_landmark_dev_image_files})
         nlm_dev_df['landmark_id'] = -1
 
+
+        # SHOULD DO SOMETHING SIMILAR FOR DEV
+        train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
+        train_info['one_hot'] = one_hot_encoder.fit_transform(
+                            train_info['label'].values.reshape(-1, 1))
+
+
+    if type == 'test':
         test_info_full = pd.read_csv('test.csv', index_col='id')
 
         test_image_files = glob.glob(test_path + '*.jpg')
@@ -66,12 +84,7 @@ def print_image():
     plt.imshow(testimg)
 
 
-label_encoder = LabelEncoder()
-one_hot_encoder = OneHotEncoder(sparse=True, n_values=n_cat)
 
-train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
-train_info['one_hot'] = one_hot_encoder.fit_transform(
-                    train_info['label'].values.reshape(-1, 1))
 
 # ### Image i/o and image data augmentation
 # Standard keras image augmentation is used and in addition random crops (with slighter additional augmentation) are scaled to full resolution. Since the original images have a higher resolution than this model, the crops will contain additional information.
@@ -209,5 +222,12 @@ else:
                               crop_prob=0.5,
                               crop_p=0.5)
 
+if __name__ == '__main__':
+    train_info = load_data(path, type='train')
+    dev_info = load_data(path, type='dev')
+    test_info = load_data(path, type='dev')
 
+    # n_cat_train = train_info['landmark_id'].nunique()
+    # if n_cat_train != n_cat:
+    #     warnings.warn('Warning: The training data is not compatible.')
 
