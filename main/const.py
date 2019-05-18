@@ -1,4 +1,10 @@
 import warnings
+import torch
+import numpy as np
+
+np.random.seed(0)
+torch.manual_seed(0)
+
 warnings.simplefilter('ignore') # Tyler: Get rid of deprecation warnings
 
 DATA_PATH = 'data/'
@@ -17,7 +23,7 @@ N_CAT = 100 # classes examining
 NUM_EPOCHS = 1
 BATCH_SIZE = 16
 BATCH_SIZE_PREDICT = 16
-INPUT_SHAPE = (299,299)
+INPUT_SHAPE = (299, 299)
 
 BASIC = True
 

@@ -10,8 +10,6 @@ from cnn_finetune import make_model
 from train import train_model
 from torchsummary import summary
 
-n_cat = 5
-
 def main():
     train_info = LandmarkDataset()
     dataloaders = {

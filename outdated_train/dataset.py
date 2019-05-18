@@ -11,9 +11,6 @@ import torch.utils.data as data
 import tqdm
 import numpy as np
 
-n_cat = 5 # classes examining
-
-
 def load_data():
     return pd.read_csv('data/train_info.csv')
     data_path = 'data/'
