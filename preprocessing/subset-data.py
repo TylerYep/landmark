@@ -24,27 +24,25 @@ def get_counts(df):
         index += [i[0]]
         count += [i[1]]
 
-    df_counts = pd.DataFrame(index=index, data=count, columns=['counts'])
+    df_counts = pd.DataFrame({'landmark_id': index, 'counts': count})
     df_counts = df_counts.sort_values('counts', ascending=False)
-    df_counts.to_csv('data/train-counts.csv')
+    df_counts.to_csv('data/train-counts.csv', index=None)
     return df_counts
 
 
 def fetch_data(df, selected_index):
     df_subset = []
-    dict_counter = dict.fromkeys(df, 0) # iniitialize all landmark_id counters to 0
+    dict_counter = dict.fromkeys(selected_index, 0) # iniitialize all landmark_id counters to 0
     for row in tqdm(df.iterrows()):
         _id, url, landmark_id = row[1]
         if landmark_id in selected_index:
-            if landmark_id not in dict_counter:
-                dict_counter[landmark_id] = 1
-                df_subset += [row[1]]
-            elif dict_counter[landmark_id] < const.TAKE_N_OF_EACH:
+            if dict_counter[landmark_id] < const.TAKE_N_OF_EACH:
                 dict_counter[landmark_id] += 1
                 df_subset += [row[1]]
         if all(value == const.TAKE_N_OF_EACH for value in dict_counter.values()):
             break
     return pd.DataFrame(df_subset)
+
 
 
 if __name__ == '__main__':
@@ -53,12 +51,13 @@ if __name__ == '__main__':
     df = df.replace(to_replace='None', value=np.nan).dropna()
     df['landmark_id'] = df['landmark_id'].astype(int)
 
-    # Find most occurring 500 unique images and take 10 of them
+    # Find most occurring N_MOST_FREQUENT_ELEMS unique images and take TAKE_N_OF_EACH of them (see const.py)
     df_counts = get_counts(df)
-    selected_index = df_counts.iloc[:const.N_MOST_FREQUENT_ELEMS, :].index
+    selected_index = list(df_counts[:const.N_MOST_FREQUENT_ELEMS]['landmark_id'])
+
     df_train = fetch_data(df, selected_index)
     df_train.to_csv('data/train-subset.csv', index=False)
 
     # df = pd.read_csv('data/test.csv')
-    # df_test = fetch_data(df)
+    # df_test = fetch_data(df, selected_index)
     # df_test.to_csv('data/test-subset.csv', index=False)

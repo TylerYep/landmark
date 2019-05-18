@@ -20,7 +20,7 @@ TEST_PATH =  DATA_PATH + 'images/test/'
 
 N_CAT = 100 # classes examining
 
-NUM_EPOCHS = 1
+NUM_EPOCHS = 50
 BATCH_SIZE = 16
 BATCH_SIZE_PREDICT = 16
 INPUT_SHAPE = (299, 299)
