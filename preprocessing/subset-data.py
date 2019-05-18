@@ -12,6 +12,7 @@ from collections import Counter
 from tqdm import tqdm
 import os
 import const
+import logging
 
 def get_counts(df):
     if os.path.exists('data/train-counts.csv'):

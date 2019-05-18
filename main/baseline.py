@@ -57,7 +57,7 @@ def train():
     X_f = top_model(X_f)
 
     model = Model(inputs=X_image, outputs=X_f)
-    opt = Adam(lr=0.0001)
+    opt = Adam(lr=3e-4)
     loss = get_custom_loss(1.0)
     #loss = 'categorical_crossentropy'
     #loss = 'binary_crossentropy'
@@ -81,7 +81,7 @@ def train():
                                   save_weights_only=True)
 
 
-    K.set_value(model.optimizer.lr, 3e-4)
+    # K.set_value(model.optimizer.lr, 3e-4)
     train_info, encoders = d.load_data(type="train")
     train_gen = d.get_image_gen(pd.concat([train_info]), encoders,
                               eq_dist=False, 

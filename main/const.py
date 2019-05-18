@@ -11,7 +11,7 @@ NON_LANDMARK_DEV_PATH =  DATA_PATH + 'images/dev-distractors/'
 
 TEST_PATH =  DATA_PATH + 'images/test/'
 
-N_CAT = 5 # classes examining
+N_CAT = 100 # classes examining
 
 batch_size = 16
 batch_size_predict = 16
