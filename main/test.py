@@ -48,7 +48,7 @@ def predict(info, load_n_images=1024):
     for ind in range(0,len(info),load_n_images):
         imgs = load_images(info.iloc[ind:(ind+load_n_images)])
         imgs = preprocess_input(imgs)
-        proba = model.predict(imgs, batch_size=batch_size_predict)
+        proba = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
 
         pred_i = np.argmax(proba, axis=1)
         max_p[ind:(ind + load_n_images)] = proba[np.arange(len(pred_i)),pred_i]
@@ -74,9 +74,9 @@ def predict_wcr_vote(info, load_n_images=1024, crop_p=0.1, n_crops = 12):
         imgs = preprocess_input(imgs)
 
         #full image
-        all_proba[0,:,:] = model.predict(imgs, batch_size=batch_size_predict)
+        all_proba[0,:,:] = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
         all_proba[1,:,:] = model.predict(np.flip(imgs, axis=2),
-                                         batch_size=batch_size_predict)
+                                         batch_size=const.BATCH_SIZE_PREDICT)
 
         crops = ['upper left', 'lower left', 'upper right', 'lower right', 'central']
         jnd_0 = 2
@@ -85,9 +85,9 @@ def predict_wcr_vote(info, load_n_images=1024, crop_p=0.1, n_crops = 12):
                                   crop_p=crop_p, crop=crop)  # optimize later
             imgs = preprocess_input(imgs)
             all_proba[jnd_0+2*jnd,:,:] = model.predict(imgs,
-                                                       batch_size=batch_size_predict)
+                                                       batch_size=const.BATCH_SIZE_PREDICT)
             all_proba[jnd_0+2*jnd+1,:,:] = model.predict(np.flip(imgs, axis=2),
-                                                         batch_size=batch_size_predict)
+                                                         batch_size=const.BATCH_SIZE_PREDICT)
 
         cmax_p = np.zeros((n_crops,imgs.shape[0]))
         cpred = np.zeros((n_crops,imgs.shape[0]))

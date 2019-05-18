@@ -2,6 +2,7 @@ import warnings
 warnings.simplefilter('ignore') # Tyler: Get rid of deprecation warnings
 
 DATA_PATH = 'data/'
+SAVE_PATH = 'save/'
 
 TRAIN_PATH = DATA_PATH + 'images/train-subset/'
 NON_LANDMARK_TRAIN_PATH =  DATA_PATH + 'images/train-distractors/'
@@ -13,8 +14,9 @@ TEST_PATH =  DATA_PATH + 'images/test/'
 
 N_CAT = 100 # classes examining
 
-batch_size = 16
-batch_size_predict = 16
+NUM_EPOCHS = 1
+BATCH_SIZE = 16
+BATCH_SIZE_PREDICT = 16
 INPUT_SHAPE = (299,299)
 
 BASIC = True

@@ -1,20 +1,23 @@
+import datetime
+
 import keras
 import keras.backend as K
 
 from keras import Model, Sequential
-from keras.layers import Dense, Dropout, Flatten, Input, LeakyReLU, BatchNormalization, Activation, Conv2D, GlobalAveragePooling2D, Lambda
+from keras.layers import Dense, Dropout, Flatten, Input, LeakyReLU, BatchNormalization, \
+                         Activation, Conv2D, GlobalAveragePooling2D, Lambda
 from keras.optimizers import Adam, RMSprop
 
 from keras.applications.xception import Xception, preprocess_input
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, TensorBoard
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import pandas as pd
 
-import dataset as d
+import dataset
 import const
 
 # TRAIN
@@ -65,49 +68,51 @@ def train():
                   optimizer=opt,
                   metrics=[binary_crossentropy_n_cat, 'accuracy', batch_GAP])
 
-    checkpoint1 = ModelCheckpoint('dd_checkpoint-1.h5',
+    checkpoint1 = ModelCheckpoint(const.SAVE_PATH + 'checkpoint-1.h5',
                                   period=1,
                                   verbose=1,
                                   save_weights_only=True)
-    checkpoint2 = ModelCheckpoint('dd_checkpoint-2.h5',
+    checkpoint2 = ModelCheckpoint(const.SAVE_PATH + 'checkpoint-2.h5',
                                   period=1,
                                   verbose=1,
                                   save_weights_only=True)
-    checkpoint3 = ModelCheckpoint('dd_checkpoint-3-best.h5',
+    checkpoint3 = ModelCheckpoint(const.SAVE_PATH + 'checkpoint-3-best.h5',
                                   period=1,
                                   verbose=1,
                                   monitor='loss',
                                   save_best_only=True,
                                   save_weights_only=True)
 
-
-    # K.set_value(model.optimizer.lr, 3e-4)
-    train_info, encoders = d.load_data(type="train")
-    train_gen = d.get_image_gen(pd.concat([train_info]), encoders,
-                              eq_dist=False, 
-                              n_ref_imgs=256, 
-                              crop_prob=0.5, 
+    train_info, encoders = dataset.load_data(type="train")
+    train_gen = dataset.get_image_gen(pd.concat([train_info]), encoders,
+                              eq_dist=False,
+                              n_ref_imgs=256,
+                              crop_prob=0.5,
                               crop_p=0.5)
-    model.fit_generator(train_gen,
-                        steps_per_epoch=len(train_info) / const.batch_size / 8,
-                        epochs=20,
-                        callbacks=[checkpoint1, checkpoint2, checkpoint3])
 
-    model.save_weights('dd_1.h5')
+    log_dir = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+
+    model.fit_generator(train_gen,
+                        steps_per_epoch=1, #len(train_info) / const.BATCH_SIZE / 8,
+                        epochs=const.NUM_EPOCHS,
+                        callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3])
+
+    model.save_weights(const.SAVE_PATH + 'dd_final.h5')
 
     K.eval(gm_exp)
 
-    plt.plot(model.history.history['loss'])
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-
-    plt.plot(model.history.history['batch_GAP'])
-    plt.xlabel('epoch')
-    plt.ylabel('batch_GAP')
-
-    plt.plot(model.history.history['acc'])
-    plt.xlabel('epoch')
-    plt.ylabel('acc')
+    # plt.plot(model.history.history['loss'])
+    # plt.xlabel('epoch')
+    # plt.ylabel('loss')
+    #
+    # plt.plot(model.history.history['batch_GAP'])
+    # plt.xlabel('epoch')
+    # plt.ylabel('batch_GAP')
+    #
+    # plt.plot(model.history.history['acc'])
+    # plt.xlabel('epoch')
+    # plt.ylabel('acc')
 
 
 # #### Custom loss function
