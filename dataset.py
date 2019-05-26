@@ -168,7 +168,7 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
             info = info_arg
         print('Generate', len(info), 'for the next round.')
 
-        #shuffle data
+        # shuffle data
         if shuffle and count >= len(info):
             info = info.sample(frac=1)
             count = 0
@@ -184,22 +184,15 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
                                            crop_p=crop_p*np.random.rand() + 0.01,
                                            crop='random')
                 if image_aug:
-                    cflow = datagen_crop.flow(imgs,
-                                              y,
-                                              batch_size=imgs.shape[0],
-                                              shuffle=False)
+                    cflow = datagen_crop.flow(imgs, y, batch_size=imgs.shape[0], shuffle=False)
                     imgs, y = next(cflow)
             else:
                 imgs = load_images(info.iloc[ind:(ind+const.BATCH_SIZE)])
                 if image_aug:
-                    cflow = datagen.flow(imgs,
-                                       y,
-                                       batch_size=imgs.shape[0],
-                                       shuffle=False)
+                    cflow = datagen.flow(imgs, y, batch_size=imgs.shape[0], shuffle=False)
                     imgs, y = next(cflow)
 
             imgs = preprocess_input(imgs)
-
 
             y_l = label_encoder.transform(y[y>=0.])
             y_oh = np.zeros((len(y), const.N_CAT))
@@ -207,20 +200,17 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
 
             yield imgs, y_oh
 
-
     if const.BASIC:
-        x = pd.concat([train_info])
+        return pd.concat([train_info])
     else:
-        x = pd.concat([train_info, nlm_df])
-
-    return x
+        return pd.concat([train_info, nlm_df])
 
 if __name__ == '__main__':
     train_info = load_data(type='train')
-    dev_info = load_data(type='dev')
-    test_info = load_data(type='dev')
+    # dev_info = load_data(type='dev')
+    # test_info = load_data(type='dev')
 
-    # n_cat_train = train_info['landmark_id'].nunique()
-    # if n_cat_train != n_cat:
-    #     warnings.warn('Warning: The training data is not compatible.')
+    n_cat_train = train_info['landmark_id'].nunique()
+    if n_cat_train != const.N_CAT:
+        warnings.warn('Warning: The training data is not compatible.')
 

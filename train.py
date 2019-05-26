@@ -1,59 +1,62 @@
-import keras
-import keras.backend as K
-
-from keras import Model, Sequential
-from keras.layers import Dense, Dropout, Flatten, Input, LeakyReLU, BatchNormalization, \
-                         Activation, Conv2D, GlobalAveragePooling2D, Lambda
-from keras.optimizers import Adam, RMSprop
-
-from keras.applications.xception import Xception, preprocess_input
-from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import to_categorical
-from keras.callbacks import ModelCheckpoint, TensorBoard
-
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import pandas as pd
+import keras
+import keras.backend as K
+from keras import Model, Sequential
+from keras.layers import Dense, Dropout, Input, Activation, Lambda
+from keras.optimizers import Adam
+from keras.applications.xception import Xception
+from keras.callbacks import ModelCheckpoint, TensorBoard
+
 
 from util import batch_GAP
 import dataset
 import const
 
-def train():
-    K.clear_session()
+def build_xception_model(freeze_layers=85):
     x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
                        weights='imagenet',
                        include_top=False)
-
     for layer in x_model.layers:
         layer.trainable = True
-    for layer in x_model.layers[:85]:
+    for layer in x_model.layers[:freeze_layers]:
         layer.trainable = False
+    return x_model
 
-    # #### Generalized mean pool
+def build_top_model(input_shape, output_shape, drop_prob=0.05):
+    #### Generalized mean pool
     gm_exp = tf.Variable(3., dtype=tf.float32)
     def generalized_mean_pool_2d(X):
         return (tf.reduce_mean(tf.abs(X**(gm_exp)), axis=[1,2], keepdims=False)+1.e-8)**(1./gm_exp)
 
-    X_feat = Input(x_model.output_shape[1:])
+    X_feat = Input(input_shape)
     lambda_layer = Lambda(generalized_mean_pool_2d)
     lambda_layer.trainable_weights.extend([gm_exp])
     X = lambda_layer(X_feat)
-    X = Dropout(0.05)(X)
+    X = Dropout(drop_prob)(X)
     X = Activation('relu')(X)
-    X = Dense(const.N_CAT, activation='softmax')(X)
+    X = Dense(output_shape, activation='softmax')(X)
 
     top_model = Model(inputs=X_feat, outputs=X)
+    return top_model
+
+def train():
+    K.clear_session()
+
+    x_model = build_xception_model()
+    top_model = build_top_model(x_model.output_shape[1:], const.N_CAT)
 
     X_image = Input(list(const.INPUT_SHAPE) + [3])
     X_f = x_model(X_image)
     X_f = top_model(X_f)
     model = Model(inputs=X_image, outputs=X_f)
+
     opt = Adam(lr=3e-4)
     loss = 'categorical_crossentropy' # get_custom_loss(1.0) or 'binary_crossentropy'
 
     def binary_crossentropy_n_cat(y_t, y_p):
-        # This is just a reweighting to yield larger numbers for the loss..
+        # This is just a reweighting to yield larger numbers for the loss.
         return keras.metrics.binary_crossentropy(y_t, y_p) * const.N_CAT
 
     model.compile(loss=loss,

@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import const
+
+model = models.load_model(const.BEST_SAVE_MODEL)
+
 
 # TODO create label encoder
 

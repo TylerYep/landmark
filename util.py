@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+
 import const
 
 #### Additional metric
@@ -19,7 +21,6 @@ def batch_GAP(y_t, y_p):
 
 
 def random_guess():
-    np.random.seed(2019)
     train_df = pd.read_csv(os.path.join(const.DATA_PATH, 'train.csv'))
     test_df = pd.read_csv(os.path.join(const.DATA_PATH, 'test.csv'))
     submit_df = pd.read_csv(os.path.join(const.DATA_PATH, 'sample_submission.csv'))
