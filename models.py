@@ -1,22 +1,42 @@
+import keras
 from keras import backend as K
-from keras.layers import Layer
+from keras.layers import Model, Dense, Dropout, Input, Activation, Lambda
+from keras.applications.xception import Xception
 
-class Baseline(Layer):
+class Baseline(keras.Model):
+     def __init__(self, freeze_layers=85):
+        super().__init__()
+        x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
+                           weights='imagenet',
+                           include_top=False)
+        for layer in x_model.layers:
+            layer.trainable = True
+        for layer in x_model.layers[:freeze_layers]:
+            layer.trainable = False
 
-    def __init__(self, output_dim, **kwargs):
-        super().__init__(**kwargs)
-        self.output_dim = output_dim
+        self.xception = x_model
+        self.top_model = build_top_model(input_shape, output_shape, drop_prob=0.05)
 
-    def build(self, input_shape):
-        # Create a trainable weight variable for this layer.
-        self.kernel = self.add_weight(name='kernel',
-                                      shape=(input_shape[1], self.output_dim),
-                                      initializer='uniform',
-                                      trainable=True)
-        super().build(input_shape)  # Be sure to call this at the end
 
-    def call(self, x):
-        return K.dot(x, self.kernel)
+    def call(self, inputs):
+        x = self.xception(inputs)
+        x = self.top_model(x)
+        return x
 
-    def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.output_dim)
+
+def build_top_model(input_shape, output_shape, drop_prob=0.05):
+    #### Generalized mean pool
+    gm_exp = tf.Variable(3., dtype=tf.float32)
+    def generalized_mean_pool_2d(X):
+        return (tf.reduce_mean(tf.abs(X**(gm_exp)), axis=[1,2], keepdims=False)+1.e-8)**(1./gm_exp)
+
+    X_feat = Input(input_shape)
+    lambda_layer = Lambda(generalized_mean_pool_2d)
+    lambda_layer.trainable_weights.extend([gm_exp])
+    X = lambda_layer(X_feat)
+    X = Dropout(drop_prob)(X)
+    X = Activation('relu')(X)
+    X = Dense(output_shape, activation='softmax')(X)
+
+    top_model = Model(inputs=X_feat, outputs=X)
+    return top_model
