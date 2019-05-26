@@ -1,20 +1,15 @@
 name: landmark
-channels:
-  - pytorch
 dependencies:
   - python=3.6
   - numpy
   - jupyter
   - pandas
   - matplotlib
-  - pytorch=1.0.0
   - pip
   - pip:
-    - torchvision==0.1.9
     - opencv-python
     - tensorflow-gpu
     - keras
     - tqdm
     - sklearn
     - pillow
-    - torch==1.0.0

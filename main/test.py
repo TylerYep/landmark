@@ -38,8 +38,7 @@ def validation_set():
 
 
 
-
-# #### Validation and prediciton
+#### Validation and prediction
 def predict(info, load_n_images=1024):
     n = len(info)
     max_p = np.zeros(n)

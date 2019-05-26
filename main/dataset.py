@@ -1,10 +1,9 @@
+import os
 import glob
 import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-import os
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.xception import preprocess_input
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
@@ -12,8 +11,11 @@ import const
 
 '''
 #### Data preparation
-Most of the code lines deal with missing images and the fact that I had started with low resolution images and that the high resolution image collection had different missing images compared to the low resolution collection.
-Basically, the following lines load the dataframes provided by kaggle, remove all missing images and add a field `filename` with a path to the downloaded jpg file.
+Most of the code lines deal with missing images and the fact that
+I had started with low resolution images and that the high resolution
+image collection had different missing images compared to the low resolution collection.
+Basically, the following lines load the dataframes provided by kaggle,
+remove all missing images and add a field `filename` with a path to the downloaded jpg file.
 There are 5 dataframes:
 * train_info: train, landmark images
 * nlm_df: train, non-landmark images
@@ -21,7 +23,6 @@ There are 5 dataframes:
 * nlm_dev_df: dev, non-landmark images
 * test_info: test images
 '''
-
 def load_data(type='train'):
     """
     Returns pandas df of data plus encoders used (if not test)
@@ -42,7 +43,7 @@ def load_data(type='train'):
         # train_info_correct = pd.read_csv('train_info_correct.csv', index_col='id')
         # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
 
-#         train_image_files = [train_path + file for file in os.listdir(train_path) if file.endswith('.jpg')]
+        # train_image_files = [train_path + file for file in os.listdir(train_path) if file.endswith('.jpg')]
         # non_landmark_image_files = glob.glob(const.NON_LANDMARK_TRAIN_PATH + '*.jp*g')
         # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
         # nlm_df['landmark_id'] = -1
@@ -77,17 +78,7 @@ def load_data(type='train'):
 
         test_info = test_info_full.loc[test_image_ids]
         test_info['filename'] = pd.Series(test_image_files, index=test_image_ids)
-
-
-
-
-def print_image():
-    print("Landmark_id of image", train_image_files[0], ":",
-          train_info.loc[train_image_ids[0]]['landmark_id'])
-    testimg = cv2.cvtColor(cv2.imread(np.random.choice(train_image_files)), cv2.COLOR_BGR2RGB)
-    plt.imshow(testimg)
-
-
+        return test_info,(label_encoder, one_hot_encoder)
 
 
 # ### Image i/o and image data augmentation
@@ -107,7 +98,6 @@ def load_images(info, input_shape=const.INPUT_SHAPE):
                           '. Use black img instead.')
             img = np.zeros((input_shape[0], input_shape[1], 3))
         imgs[i,:,:,:] = img
-
     return imgs
 
 
