@@ -63,7 +63,6 @@ def load_data(type='train'):
         # nlm_dev_df = pd.DataFrame({'filename': non_landmark_dev_image_files})
         # nlm_dev_df['landmark_id'] = -1
 
-
         # SHOULD DO SOMETHING SIMILAR FOR DEV
         dev_info['label'] = label_encoder.fit_transform(dev_info['landmark_id'].values)
         dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))

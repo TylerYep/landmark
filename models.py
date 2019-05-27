@@ -5,18 +5,24 @@ from keras.layers import Dense, Dropout, Input, Activation, Lambda
 from keras.applications.xception import Xception
 import const
 
-class Baseline(Model):
+class Baseline():
     def __init__(self):
         x_model = build_xception_model()
         top_model = build_top_model(x_model.output_shape[1:], const.N_CAT)
 
         X_image = Input(list(const.INPUT_SHAPE) + [3])
         X_f = x_model(X_image)
-        X_f = top_model(X_f)
-        self.model = super().__init__(inputs=X_image, outputs=X_f)
+        # X_f = top_model(X_f)
+        self.model = Model(inputs=X_image, outputs=X_f, name='Baseline')
 
-    def call(self, inputs):
-        return self.model(inputs)
+
+
+
+
+
+
+
+''' Model helper methods '''
 
 def build_xception_model(freeze_layers=85):
     x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
