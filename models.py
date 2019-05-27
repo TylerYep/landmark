@@ -1,28 +1,32 @@
+import tensorflow as tf
 import keras
-from keras import backend as K
-from keras.layers import Model, Dense, Dropout, Input, Activation, Lambda
+from keras import Model
+from keras.layers import Dense, Dropout, Input, Activation, Lambda
 from keras.applications.xception import Xception
+import const
 
-class Baseline(keras.Model):
-     def __init__(self, freeze_layers=85):
-        super().__init__()
-        x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
-                           weights='imagenet',
-                           include_top=False)
-        for layer in x_model.layers:
-            layer.trainable = True
-        for layer in x_model.layers[:freeze_layers]:
-            layer.trainable = False
+class Baseline(Model):
+    def __init__(self):
+        x_model = build_xception_model()
+        top_model = build_top_model(x_model.output_shape[1:], const.N_CAT)
 
-        self.xception = x_model
-        self.top_model = build_top_model(input_shape, output_shape, drop_prob=0.05)
-
+        X_image = Input(list(const.INPUT_SHAPE) + [3])
+        X_f = x_model(X_image)
+        X_f = top_model(X_f)
+        self.model = super().__init__(inputs=X_image, outputs=X_f)
 
     def call(self, inputs):
-        x = self.xception(inputs)
-        x = self.top_model(x)
-        return x
+        return self.model(inputs)
 
+def build_xception_model(freeze_layers=85):
+    x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
+                       weights='imagenet',
+                       include_top=False)
+    for layer in x_model.layers:
+        layer.trainable = True
+    for layer in x_model.layers[:freeze_layers]:
+        layer.trainable = False
+    return x_model
 
 def build_top_model(input_shape, output_shape, drop_prob=0.05):
     #### Generalized mean pool

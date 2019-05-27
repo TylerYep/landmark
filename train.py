@@ -4,10 +4,7 @@ import pandas as pd
 
 import keras
 import keras.backend as K
-from keras import Model
-from keras.layers import Dense, Dropout, Input, Activation, Lambda
 from keras.optimizers import Adam
-from keras.applications.xception import Xception
 from keras.callbacks import ModelCheckpoint, TensorBoard
 
 from util import batch_GAP
@@ -18,14 +15,6 @@ from models import Baseline
 
 def train():
     K.clear_session()
-
-    # x_model = build_xception_model()
-    # top_model = build_top_model(x_model.output_shape[1:], const.N_CAT)
-    #
-    # X_image = Input(list(const.INPUT_SHAPE) + [3])
-    # X_f = x_model(X_image)
-    # X_f = top_model(X_f)
-    # model = Model(inputs=X_image, outputs=X_f)
 
     model = Baseline()
 
