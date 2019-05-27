@@ -79,7 +79,6 @@ def load_data(type='train'):
         test_info['filename'] = pd.Series(test_image_files, index=test_image_ids)
         return test_info,(label_encoder, one_hot_encoder)
 
-
 # ### Image i/o and image data augmentation
 # Standard keras image augmentation is used and in addition random crops (with slighter additional augmentation) are scaled to full resolution. Since the original images have a higher resolution than this model, the crops will contain additional information.
 def load_images(info, input_shape=const.INPUT_SHAPE):
@@ -212,4 +211,3 @@ if __name__ == '__main__':
     n_cat_train = train_info['landmark_id'].nunique()
     if n_cat_train != const.N_CAT:
         warnings.warn('Warning: The training data is not compatible.')
-
