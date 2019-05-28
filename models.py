@@ -5,6 +5,7 @@ from keras.layers import Dense, Dropout, Input, Activation, Lambda
 from keras.applications.xception import Xception
 import const
 import layers
+from cbp import compact_bilinear_pooling
 
 class Baseline():
     def __init__(self):
@@ -26,8 +27,7 @@ class Sirius():
         X_f = x_model(X_image)
 
         #bilinear pooling layer
-        output_channels = 8192
-        X_f = layers.CompactBilinearPooling(output_channels)([X_f, X_f])
+        X_f = compact_bilinear_pooling(output_dim=8192)([X_f, X_f])
 
         #top layers for classification
         X_f = top_model(X_f)

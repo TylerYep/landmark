@@ -7,11 +7,11 @@ np.random.seed(0)
 tf.set_random_seed(0)
 warnings.simplefilter('ignore')
 
-N_CAT = 203094 # classes examining
+N_CAT = 100 # classes examining
 
-NUM_EPOCHS = 100
-BATCH_SIZE = 64
-BATCH_SIZE_PREDICT = 64
+NUM_EPOCHS = 50
+BATCH_SIZE = 16
+BATCH_SIZE_PREDICT = 16
 INPUT_SHAPE = (299, 299)
 
 BASIC = True
@@ -29,6 +29,3 @@ NON_LANDMARK_DEV_PATH = DATA_PATH + 'images/dev-distractors/'
 TEST_PATH =  DATA_PATH + 'images/test/'
 
 BEST_SAVE_MODEL = SAVE_PATH + 'dd_final.h5'
-
-
-
