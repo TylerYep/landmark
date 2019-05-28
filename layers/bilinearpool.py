@@ -1,5 +1,6 @@
 import theano
 from theano import tensor as T
+import tensorflow as tf
 import numpy as np
 import keras
 from keras import backend as K
@@ -42,7 +43,7 @@ class CompactBilinearPooling(Layer):
                 self.h[i] = np.random.random_integers(0, self.d-1, size=(input_shapes[i][-1],))
                 self.h[i] = K.variable(self.h[i], dtype='int64', name='h'+str(i))
             if self.s[i] is None:
-                self.s[i] =  (np.floor(np.random.uniform(0, 2, size=(input_shapes[i][-1],)))*2-1).astype('int64')
+                self.s[i] = (np.floor(np.random.uniform(0, 2, size=(input_shapes[i][-1],)))*2-1).astype('int64')
                 self.s[i] = K.variable(self.s[i], dtype='int64', name='s'+str(i))
         self.non_trainable_weights = [self.h, self.s]
 
@@ -109,102 +110,30 @@ class CompactBilinearPooling(Layer):
         return shapes
 
 
-class CountSketch(Layer):
-    '''Count Sketch vector compacting
-    # Arguments:
-        d: dimension of the output compact representation
-    '''
+# def count_sketch(h, s, x, d):
+#     y = np.zeros((x.shape[0], d))
+#     for v in x:
+#         y[:, h] += np.dot(s, v)
+#     return
 
-    def __init__(self, d, return_extra=False, **kwargs):
-        self.h = [None, None]
-        self.s = [None, None]
-        self.return_extra = return_extra
-        self.d = d
+def count_sketch(h, s, x, d):
 
-        # layer parameters
-        self.inbound_nodes = []
-        self.outbound_nodes = []
-        self.constraints = {}
-        self.regularizers = []
-        self.trainable_weights = []
-        self.non_trainable_weights = []
-        self.supports_masking = True
-        self.trainable = False
-        self.uses_learning_phase = False
-        self.input_spec = None  # compatible with whatever
-        self.built = False
-        super(CountSketch, self).__init__(**kwargs)
+    print(h,s,x)
+    outputs = tf.scan(fn=__count_sketch,
+                    elems=[h, s, x])
+    return outputs[-1] # We are interested only in the last value
 
-    def build(self, input_shapes):
-        if not self.built:
-            self.trainable_weights = []
-            self.nmodes = len(input_shapes)
-            for i in range(self.nmodes):
-                if self.h[i] is None:
-                    self.h[i] = np.random.random_integers(0, self.d-1, size=(input_shapes[i][1],))
-                    self.h[i] = K.variable(self.h[i], dtype='int64', name='h'+str(i))
-                if self.s[i] is None:
-                    self.s[i] =  (np.floor(np.random.uniform(0, 2, size=(input_shapes[i][1],)))*2-1).astype('int64')
-                    self.s[i] = K.variable(self.s[i], dtype='int64', name='s'+str(i))
-        self.built = True
-
-    def compute_mask(self, input, input_mask=None):
-        to_return = []
-        if input_mask is None or not any([m is not None for m in input_mask]):
-            for i in range(len(input_mask)):
-                to_return.append(None)
-        else:
-            to_return =  input_mask
-        if self.return_extra:
-            for i in range(self.nmodes):
-                to_return += [None, None]
-        return to_return
-
-    def compact(self, x):
-        v = [[]] * self.nmodes
-        for i in range(self.nmodes):
-            v[i] = count_sketch(self.h[i], self.s[i], x[i], self.d)
-        return v
-
-    def call(self, x, mask=None):
-        if type(x) is not list or len(x) <= 1:
-            raise Exception('CountSketch must be called on a list of tensors.')
-        y = self.compact(x)
-        if self.return_extra:
-            return y+self.h+self.s
-        return y
-
-    def get_config(self):
-        config = {'d': self.d,
-                  'return_extra': self.return_extra}
-        base_config = super(CountSketch, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-    def get_output_shape_for(self, input_shape):
-        assert type(input_shape) is list  # must have mutiple input shape tuples
-        shapes = []
-        for s in input_shape:
-            shapes.append(tuple([s[0], self.d]))
-        if self.return_extra:
-            for i in range(self.nmodes):
-                shapes.append(tuple([input_shape[i][1],1]))
-            for i in range(self.nmodes):
-                shapes.append(tuple([input_shape[i][1],1]))
-        return shapes
+def __count_sketch(h, s, v, y): # Sequences,  # Outputs info
+    return y[:, h] + np.dot(s, v)
 
 
-def count_sketch(h, s, x, d=16000):
-    print (x.shape)
-    x = K.get_value(x)
-    x = convert_kernel(x)
-    print (x.shape)
-    rval, updates = theano.scan(fn=__count_sketch,
-                            sequences=[h, s, x.dimshuffle(1,0)],
-                            outputs_info = T.alloc(0., x.shape[0], d),
-                            non_sequences=[], n_steps=x.shape[1])
-    return rval[-1] # We are interested only in the last value
-
-def __count_sketch(h, s, v,  # Sequences
-                   y, # Outputs info
-                   ):
-    return T.cast(T.inc_subtensor(y[:, h], T.dot(s, v)), 'float32')
+# def count_sketch(h, s, x, d=16000):
+#
+#     rval, updates = theano.scan(fn=__count_sketch,
+#                             sequences=[h, s, x.dimshuffle(1,0)],
+#                             outputs_info = T.alloc(0., x.shape[0], d),
+#                             non_sequences=[], n_steps=x.shape[1])
+#     return rval[-1] # We are interested only in the last value
+#
+# def __count_sketch(h, s, v, y): # Sequences,  # Outputs info
+#     return T.cast(T.inc_subtensor(y[:, h], T.dot(s, v)), 'float32')

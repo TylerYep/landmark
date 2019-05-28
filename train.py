@@ -12,12 +12,11 @@ import dataset
 import const
 import layers
 
-
 def train():
     K.clear_session()
 
-    # model = Baseline().model
-    model = Sirius().model
+    model = Baseline().model
+    # model = Sirius().model
 
     opt = Adam(lr=3e-4)
     loss = 'categorical_crossentropy' # get_custom_loss(1.0) or 'binary_crossentropy'
