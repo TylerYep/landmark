@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import tensorflow as tf
 
-from sequential_fft import sequential_batch_fft, sequential_batch_ifft
+from .sequential_fft import sequential_batch_fft, sequential_batch_ifft
 
 def _fft(bottom, sequential, compute_size):
     if sequential:
