@@ -11,7 +11,7 @@ model = models.load_model(const.BEST_SAVE_MODEL)
 
 def validation_set():
     # Validate only on landmark images
-    dev_binary_acc, dev_GAP = validate(dev_info, 50)
+    # dev_binary_acc, dev_GAP = validate(dev_info, 50)
 
     # Validate on landmark and non-landmark images
     dev_binary_acc, dev_GAP = validate(pd.concat([dev_info, nlm_dev_df]).sample(frac=1), 1024)

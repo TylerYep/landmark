@@ -16,8 +16,9 @@ def train():
     K.clear_session()
 
     model = Baseline().model
-    model.load_weights('dd_final.h5')
-    print(model.summary())
+    if const.CONTINUE_TRAIN:
+        model.load_weights(const.SAVE_PATH + 'dd_final.h5')
+        print(model.summary())
     # model = Baseline().model
     # model = Sirius().model
 
@@ -46,12 +47,20 @@ def train():
                                       crop_prob=0.5,
                                       crop_p=0.5)
 
+    # dev_set = dataset.load_data(type="dev")
+    # dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
+    #                                   eq_dist=False,
+    #                                   n_ref_imgs=256,
+    #                                   crop_prob=0.5,
+    #                                   crop_p=0.5)
+
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=const.LOG_DIR)
 
     model.fit_generator(train_gen,
                         steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8,
                         epochs=const.NUM_EPOCHS,
                         callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3])
+                        # validation_data=(x_val, y_val))
     model.save_weights(const.SAVE_PATH + 'dd_final.h5')
     # K.eval(gm_exp)
 
