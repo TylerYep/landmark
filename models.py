@@ -5,7 +5,8 @@ from keras.layers import Dense, Dropout, Input, Activation, Lambda
 from keras.applications.xception import Xception
 import const
 import layers
-from bilinearpool import compact_bilinear_pooling_layer
+if const.RUN_ON_GPU:
+    from bilinearpool import compact_bilinear_pooling_layer
 
 class Baseline():
     def __init__(self):

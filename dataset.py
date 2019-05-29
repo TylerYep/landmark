@@ -34,7 +34,7 @@ def load_data(type='train'):
     total_df = pd.concat([train_info_full, dev_info_full, test_info_full])
 
     label_encoder = LabelEncoder()
-    label_encoder.fit(total_df)
+    label_encoder.fit(total_df['landmark_id'].values)
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
     if type == 'train':
