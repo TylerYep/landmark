@@ -6,7 +6,7 @@ import keras.backend as K
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, TensorBoard
 
-from models import Baseline
+from models import Baseline, Sirius
 from util import batch_GAP
 import dataset
 import const

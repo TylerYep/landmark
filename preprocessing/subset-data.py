@@ -44,7 +44,6 @@ def fetch_data(df, selected_index):
     return pd.DataFrame(df_subset)
 
 
-
 if __name__ == '__main__':
     # Counting occurences
     df = pd.read_csv('data/train.csv')
@@ -56,10 +55,12 @@ if __name__ == '__main__':
     # selected_index = list(df_counts[:const.N_MOST_FREQUENT_ELEMS]['landmark_id'])
     # df_train = fetch_data(df, selected_index)
 
+    df_train = df.sample(const.TRAIN_SIZE)
+    df_train.to_csv(const.TRAIN_CSV, index=False)
 
-    df.sample()
-    df_train.to_csv('data/train-subset.csv', index=False)
+    df_dev = df.sample(const.DEV_SIZE)
+    df_dev.to_csv(const.DEV_CSV, index=False)
 
-    # df = pd.read_csv('data/test.csv')
-    # df_test = fetch_data(df, selected_index)
-    # df_test.to_csv('data/test-subset.csv', index=False)
+    print(df_train.nunique())
+    print(df_dev.nunique())
+    print(pd.concat([df_train, df_dev]).nunique())

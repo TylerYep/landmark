@@ -19,7 +19,7 @@ Run ``` python preprocessing/subset-data.py ```.
 
 (Note: everything should be run from the ```landmark/``` level.)
 
-This file outputs a modified ```train-subset.csv``` file to fetch images from. You can specify how many unique landmarks you want and how many of each you want by changing variables in ```const.py```.
+This file outputs a modified ```train-subset.csv``` file to fetch images from. You can specify how many unique landmarks you want and how many of each you want by changing variables in ```const.py```. For our project, we will use 100,000 random images sampled from the full ```train.py``` dataset.
 
 ### Step 3: Download Images
 Run ``` python download-images.py ```.

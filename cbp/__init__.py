@@ -1,1 +1,2 @@
-from .cbp import compact_bilinear_pooling
+from .compact_bilinear_pooling import compact_bilinear_pooling
+from .sequential_batch_fft_ops import sequential_batch_fft, sequential_batch_ifft

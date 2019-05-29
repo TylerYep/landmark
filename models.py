@@ -5,7 +5,7 @@ from keras.layers import Dense, Dropout, Input, Activation, Lambda
 from keras.applications.xception import Xception
 import const
 import layers
-from cbp import compact_bilinear_pooling
+from bilinearpool import compact_bilinear_pooling
 
 class Baseline():
     def __init__(self):
