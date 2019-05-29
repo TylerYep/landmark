@@ -28,20 +28,20 @@ def load_data(type='train'):
     """
     Returns pandas df of data plus encoders used (if not test)
     """
-    train_info_full = pd.read_csv(const.TRAIN_CSV, index_col='id')
-    dev_info_full = pd.read_csv(const.DEV_CSV, index_col='id')
-    test_info_full = pd.read_csv(const.TEST_CSV, index_col='id')
-    total_df = pd.concat([train_info_full, dev_info_full, test_info_full])
+    train_info = pd.read_csv(const.TRAIN_CSV, index_col='id')
+    dev_info = pd.read_csv(const.DEV_CSV, index_col='id')
+    total_df = pd.concat([train_info, dev_info])
 
     label_encoder = LabelEncoder()
     label_encoder.fit(total_df['landmark_id'].values)
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
     if type == 'train':
-        train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
-        train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') \
-                                    for image_file in train_image_files]
-        train_info = train_info_full.loc[train_image_ids]
+        # train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
+        # train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') for image_file in train_image_files]
+        # train_info = train_info_full.loc[train_image_ids]
+        train_image_ids = train_info.index.values
+        train_image_files = [const.TRAIN_PATH + id + '.jpg' for id in train_image_ids]
         train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
 
         # Heidi: commented out b/c our subset should not be missing any images
@@ -61,7 +61,7 @@ def load_data(type='train'):
         dev_image_files = glob.glob(const.DEV_PATH + '*.jpg')
         dev_image_ids = [image_file.replace('.jpg', '').replace(const.DEV_PATH, '') \
                             for image_file in dev_image_files]
-        dev_info = train_info_full.loc[dev_image_ids]
+        dev_info = train_info.loc[dev_image_ids]
         dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
 
         # non_landmark_dev_image_files = glob.glob(const.NON_LANDMARK_DEV_PATH + '*.jpg')
