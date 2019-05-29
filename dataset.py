@@ -40,18 +40,10 @@ def load_data(type='train'):
         # train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
         # train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') for image_file in train_image_files]
         # train_info = train_info_full.loc[train_image_ids]
+
         train_image_ids = train_info.index.values
         train_image_files = [const.TRAIN_PATH + id + '.jpg' for id in train_image_ids]
         train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
-
-        # Heidi: commented out b/c our subset should not be missing any images
-        # train_info_correct = pd.read_csv('train_info_correct.csv', index_col='id')
-        # train_info = train_info[train_info['landmark_id'].isin(train_info_correct['landmark_id'])]
-
-        # train_image_files = [train_path + file for file in os.listdir(train_path) if file.endswith('.jpg')]
-        # non_landmark_image_files = glob.glob(const.NON_LANDMARK_TRAIN_PATH + '*.jp*g')
-        # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
-        # nlm_df['landmark_id'] = -1
 
         train_info['label'] = label_encoder.transform(train_info['landmark_id'].values)
         train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
@@ -64,11 +56,6 @@ def load_data(type='train'):
         dev_info = train_info.loc[dev_image_ids]
         dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
 
-        # non_landmark_dev_image_files = glob.glob(const.NON_LANDMARK_DEV_PATH + '*.jpg')
-        # nlm_dev_df = pd.DataFrame({'filename': non_landmark_dev_image_files})
-        # nlm_dev_df['landmark_id'] = -1
-
-        # SHOULD DO SOMETHING SIMILAR FOR DEV
         dev_info['label'] = label_encoder.transform(dev_info['landmark_id'].values)
         dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))
         return dev_info, (label_encoder, one_hot_encoder)
@@ -129,9 +116,7 @@ def load_cropped_images(info, crop_p=0.2, crop='random', input_shape=const.INPUT
 
     cropped_imgs = np.zeros((len(info), input_shape[0], input_shape[1], 3))
     for ind in range(len(info)):
-        cropped_imgs[ind,:,:,:] = raw_imgs[ind,
-                                           cy0[ind]:cy1[ind],
-                                           cx0[ind]:cx1[ind], :]
+        cropped_imgs[ind,:,:,:] = raw_imgs[ind, cy0[ind]:cy1[ind], cx0[ind]:cx1[ind], :]
     return cropped_imgs
 
 
@@ -176,7 +161,7 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
             count = 0
 
         # load images
-        for ind in range(0,len(info), const.BATCH_SIZE):
+        for ind in range(0, len(info), const.BATCH_SIZE):
             count += const.BATCH_SIZE
 
             y = info['landmark_id'].values[ind:(ind+const.BATCH_SIZE)]
@@ -210,4 +195,4 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
 if __name__ == '__main__':
     train_info = load_data(type='train')
     # dev_info = load_data(type='dev')
-    # test_info = load_data(type='dev')
+    # test_info = load_data(type='test')

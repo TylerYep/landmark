@@ -16,6 +16,9 @@ def train():
     K.clear_session()
 
     model = Baseline().model
+    model.load_weights('dd_final.h5')
+    print(model.summary())
+    # model = Baseline().model
     # model = Sirius().model
 
     opt = Adam(lr=3e-4)
@@ -50,7 +53,7 @@ def train():
                         epochs=const.NUM_EPOCHS,
                         callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3])
     model.save_weights(const.SAVE_PATH + 'dd_final.h5')
-    K.eval(gm_exp)
+    # K.eval(gm_exp)
 
 '''
 #### Custom loss function

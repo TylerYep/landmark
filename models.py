@@ -18,6 +18,7 @@ class Baseline():
         X_f = top_model(X_f)
         self.model = Model(inputs=X_image, outputs=X_f, name='Baseline')
 
+
 class Sirius():
     def __init__(self):
         # same as baseline: Xception + top layer of xception
@@ -26,10 +27,11 @@ class Sirius():
 
         X_image = Input(list(const.INPUT_SHAPE) + [3])
         X_f = x_model(X_image)
+        d = X_f.shape
 
         # bilinear pooling layer
         X_f = compact_bilinear_pooling_layer(output_dim=8192)([X_f, X_f])
-
+        c = X_f.shape[]
         # top layers for classification
         X_f = top_model(X_f)
 

@@ -2,7 +2,6 @@
 data/*
 !data/sample_submission.csv
 logs/
-save/
 *.h5
 
 ####################

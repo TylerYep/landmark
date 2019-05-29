@@ -31,8 +31,8 @@ if not RUN_ON_GPU:
 
 ##### GPU SETTINGS #####
 else:
-    BATCH_SIZE = 16
-    BATCH_SIZE_PREDICT = 16
+    BATCH_SIZE = 32
+    BATCH_SIZE_PREDICT = 32
     train_df = pd.read_csv(TRAIN_CSV)
     dev_df = pd.read_csv(DEV_CSV)
     test_df = pd.read_csv(TEST_CSV)
@@ -40,11 +40,9 @@ else:
     N_CAT = df['landmark_id'].nunique()
 
 
-NUM_EPOCHS = 100
+NUM_EPOCHS = 200
 INPUT_SHAPE = (299, 299)
 
 BASIC = True
 LOG_DIR = 'logs/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
-
-#####################
