@@ -52,10 +52,12 @@ if __name__ == '__main__':
     df['landmark_id'] = df['landmark_id'].astype(int)
 
     # Find most occurring N_MOST_FREQUENT_ELEMS unique images and take TAKE_N_OF_EACH of them (see const.py)
-    df_counts = get_counts(df)
-    selected_index = list(df_counts[:const.N_MOST_FREQUENT_ELEMS]['landmark_id'])
+    # df_counts = get_counts(df)
+    # selected_index = list(df_counts[:const.N_MOST_FREQUENT_ELEMS]['landmark_id'])
+    # df_train = fetch_data(df, selected_index)
 
-    df_train = fetch_data(df, selected_index)
+
+    df.sample()
     df_train.to_csv('data/train-subset.csv', index=False)
 
     # df = pd.read_csv('data/test.csv')

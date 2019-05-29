@@ -27,7 +27,7 @@ def load_data(type='train'):
     """
     Returns pandas df of data plus encoders used (if not test)
     """
-    train_info_full = pd.read_csv(const.DATA_PATH + 'train-subset.csv', index_col='id')
+    train_info_full = pd.read_csv(const.TRAIN_CSV, index_col='id')
 
     label_encoder = LabelEncoder()
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
@@ -47,6 +47,10 @@ def load_data(type='train'):
         # non_landmark_image_files = glob.glob(const.NON_LANDMARK_TRAIN_PATH + '*.jp*g')
         # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
         # nlm_df['landmark_id'] = -1
+
+        n_cat_train = train_info['landmark_id'].nunique()
+        if n_cat_train != const.N_CAT:
+            warnings.warn('Warning: The training data is not compatible.')
 
         train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
         train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
@@ -207,7 +211,3 @@ if __name__ == '__main__':
     train_info = load_data(type='train')
     # dev_info = load_data(type='dev')
     # test_info = load_data(type='dev')
-
-    n_cat_train = train_info['landmark_id'].nunique()
-    if n_cat_train != const.N_CAT:
-        warnings.warn('Warning: The training data is not compatible.')
