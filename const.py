@@ -33,7 +33,10 @@ if not RUN_ON_GPU:
 else:
     BATCH_SIZE = 16
     BATCH_SIZE_PREDICT = 16
-    df = pd.read_csv(TRAIN_CSV)
+    train_df = pd.read_csv(TRAIN_CSV)
+    dev_df = pd.read_csv(DEV_CSV)
+    test_df = pd.read_csv(TEST_CSV)
+    df = pd.concat([train_df, dev_df, test_df])
     N_CAT = df['landmark_id'].nunique()
 
 

@@ -29,8 +29,12 @@ def load_data(type='train'):
     Returns pandas df of data plus encoders used (if not test)
     """
     train_info_full = pd.read_csv(const.TRAIN_CSV, index_col='id')
+    dev_info_full = pd.read_csv(const.DEV_CSV, index_col='id')
+    test_info_full = pd.read_csv(const.TEST_CSV, index_col='id')
+    total_df = pd.concat([train_info_full, dev_info_full, test_info_full])
 
     label_encoder = LabelEncoder()
+    label_encoder.fit(total_df)
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
     if type == 'train':
@@ -49,12 +53,7 @@ def load_data(type='train'):
         # nlm_df = pd.DataFrame({'filename': non_landmark_image_files})
         # nlm_df['landmark_id'] = -1
 
-        n_cat_train = train_info['landmark_id'].nunique()
-        if n_cat_train != const.N_CAT:
-            print(n_cat_train, const.N_CAT)
-            warnings.warn('Warning: The training data is not compatible.')
-
-        train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)
+        train_info['label'] = label_encoder.transform(train_info['landmark_id'].values)
         train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
         return train_info, (label_encoder, one_hot_encoder)
 
@@ -70,12 +69,11 @@ def load_data(type='train'):
         # nlm_dev_df['landmark_id'] = -1
 
         # SHOULD DO SOMETHING SIMILAR FOR DEV
-        dev_info['label'] = label_encoder.fit_transform(dev_info['landmark_id'].values)
+        dev_info['label'] = label_encoder.transform(dev_info['landmark_id'].values)
         dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))
-        return dev_info,(label_encoder, one_hot_encoder)
+        return dev_info, (label_encoder, one_hot_encoder)
 
     elif type == 'test':
-        test_info_full = pd.read_csv('test.csv', index_col='id')
 
         test_image_files = glob.glob(const.TEST_PATH + '*.jpg')
         test_image_ids = [image_file.replace('.jpg', '').replace(const.TEST_PATH, '') \
