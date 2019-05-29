@@ -8,3 +8,6 @@ TAKE_N_OF_EACH = 50
 
 TRAIN_SIZE = 100000 # Check subset-data to see if this constant is being used
 DEV_SIZE = 10000
+
+TRAIN_CSV = 'data/train-subset.csv'
+DEV_CSV = 'data/dev.csv'
