@@ -3,6 +3,7 @@ import glob
 import cv2
 import numpy as np
 import pandas as pd
+import warnings
 import matplotlib.pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.xception import preprocess_input
@@ -50,6 +51,7 @@ def load_data(type='train'):
 
         n_cat_train = train_info['landmark_id'].nunique()
         if n_cat_train != const.N_CAT:
+            print(n_cat_train, const.N_CAT)
             warnings.warn('Warning: The training data is not compatible.')
 
         train_info['label'] = label_encoder.fit_transform(train_info['landmark_id'].values)

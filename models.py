@@ -27,7 +27,7 @@ class Sirius():
         X_f = x_model(X_image)
 
         # bilinear pooling layer
-        X_f = compact_bilinear_pooling(output_dim=8192)([X_f, X_f])
+        X_f = compact_bilinear_pooling_layer(output_dim=8192)([X_f, X_f])
 
         # top layers for classification
         X_f = top_model(X_f)
