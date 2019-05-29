@@ -5,12 +5,12 @@
 # For example, here's several helpful packages to load in
 
 # Subset selector for train dataset
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
 from tqdm import tqdm
-import os
 import const
 import logging
 
