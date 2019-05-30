@@ -53,7 +53,6 @@ def load_data(type='train'):
         return info, (label_encoder, one_hot_encoder)
 
     elif type == 'test':
-        info = test_info
         path = const.TEST_PATH
         info = pd.read_csv(const.TEST_CSV, index_col='id')
 
