@@ -16,11 +16,11 @@ def train():
     K.clear_session()
 
     model = Baseline().model
+    # model = Sirius().model
+
     if const.CONTINUE_TRAIN:
         model.load_weights(const.SAVE_PATH + 'dd_final.h5')
         print(model.summary())
-    # model = Baseline().model
-    # model = Sirius().model
 
     opt = Adam(lr=3e-4)
     loss = 'categorical_crossentropy' # get_custom_loss(1.0) or 'binary_crossentropy'

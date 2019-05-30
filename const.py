@@ -25,9 +25,13 @@ BEST_SAVE_MODEL = SAVE_PATH + 'dd_final.h5'
 
 ### CHANGE THESE SETTINGS ON LOCAL ###
 if not RUN_ON_GPU:
+    CONTINUE_TRAIN = False
     BATCH_SIZE = 16
     BATCH_SIZE_PREDICT = 16
-    N_CAT = 100 # classes examining
+    train_df = pd.read_csv(TRAIN_CSV)
+    dev_df = pd.read_csv(DEV_CSV)
+    df = pd.concat([train_df, dev_df])
+    N_CAT = df['landmark_id'].nunique()
 
 ##### GPU SETTINGS #####
 else:

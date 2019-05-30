@@ -37,6 +37,7 @@ def load_data(type='train'):
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
     if type == 'train':
+        ### Takes all images from the data/train folder
         # train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
         # train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') for image_file in train_image_files]
         # train_info = train_info_full.loc[train_image_ids]
@@ -60,7 +61,7 @@ def load_data(type='train'):
         dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))
         return dev_info, (label_encoder, one_hot_encoder)
 
-    elif type == 'test':
+    elif type == 'test': # TODO
         test_image_files = glob.glob(const.TEST_PATH + '*.jpg')
         test_image_ids = [image_file.replace('.jpg', '').replace(const.TEST_PATH, '') \
                             for image_file in test_image_files]
@@ -158,6 +159,7 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
             print('Shuffling Data...')
             # info = info df.set_index(np.random.permutation(info.index)) # broken, supposedly
             info = info.iloc[np.random.permutation(np.arange(len(info)))]
+            print(info.head(3))
             # info = info.sample(frac=1)
             count = 0
 
@@ -172,12 +174,12 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
                                            crop_p=crop_p*np.random.rand() + 0.01,
                                            crop='random')
                 if image_aug:
-                    cflow = datagen_crop.flow(imgs, y, batch_size=imgs.shape[0], shuffle=False)
+                    cflow = datagen_crop.flow(imgs, y, batch_size=imgs.shape[0], shuffle=True)
                     imgs, y = next(cflow)
             else:
                 imgs = load_images(info.iloc[ind:(ind+const.BATCH_SIZE)])
                 if image_aug:
-                    cflow = datagen.flow(imgs, y, batch_size=imgs.shape[0], shuffle=False)
+                    cflow = datagen.flow(imgs, y, batch_size=imgs.shape[0], shuffle=True)
                     imgs, y = next(cflow)
 
             imgs = preprocess_input(imgs)
@@ -194,13 +196,13 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
         return pd.concat([train_info, nlm_df])
 
 if __name__ == '__main__':
-    train_info, (label_encoder, one_hot_encoder) = load_data(type='train')
+    train_info, encoders = load_data(type='train')
     gen = get_image_gen(pd.concat([train_info]), encoders,
                                       eq_dist=False,
                                       n_ref_imgs=256,
                                       crop_prob=0.5,
                                       crop_p=0.5)
     for imgs, y_oh in gen:
-        print(imgs, y_oh)
+        print(imgs[0], y_oh)
         break
 
