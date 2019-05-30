@@ -2,12 +2,13 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
 from models import Baseline, Sirius
+import dataset
 import const
 
 def main():
     model = Baseline().model
     model.load_weights(const.BEST_SAVE_MODEL)
-    test_info, label_encoder = load_data(type='test')
+    test_info, label_encoder = dataset.load_data(type='test')
     test_results_to_csv(model, test_info, label_encoder)
 
 
