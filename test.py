@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
+from keras.applications.xception import preprocess_input
 from models import Baseline, Sirius
 import dataset
 import const
@@ -42,12 +43,12 @@ def predict(info, label_encoder, load_n_images=1024):
     pred = np.zeros(n)
 
     for ind in range(0,len(info), load_n_images):
-        imgs = load_images(info.iloc[ind:(ind+load_n_images)])
+        imgs = dataset.load_images(info.iloc[ind:(ind+load_n_images)])
         imgs = preprocess_input(imgs)
         proba = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
 
         pred_i = np.argmax(proba, axis=1)
-        max_p[ind:(ind + load_n_images)] = proba[np.arange(len(pred_i)),pred_i]
+        max_p[ind:(ind + load_n_images)] = proba[np.arange(len(pred_i)), pred_i]
         pred[ind:(ind + load_n_images)] = label_encoder.inverse_transform(pred_i)
 
         print(ind, '/', len(info), '  -->', pred[ind], max_p[ind])
@@ -64,9 +65,9 @@ def predict_wcr_vote(info, label_encoder, load_n_images=1024, crop_p=0.1, n_crop
     pred = np.zeros(n)
 
     for ind in range(0,len(info),load_n_images):
-        all_proba = np.zeros((n_crops, min(load_n_images, len(info)-ind), n_cat))
+        all_proba = np.zeros((n_crops, min(load_n_images, len(info)-ind), const.N_CAT))
 
-        imgs = load_images(info.iloc[ind:(ind+load_n_images)])
+        imgs = dataset.load_images(info.iloc[ind:(ind+load_n_images)])
         imgs = preprocess_input(imgs)
 
         #full image
@@ -76,7 +77,7 @@ def predict_wcr_vote(info, label_encoder, load_n_images=1024, crop_p=0.1, n_crop
         crops = ['upper left', 'lower left', 'upper right', 'lower right', 'central']
         jnd_0 = 2
         for jnd,crop in enumerate(crops):
-            imgs = load_cropped_images(info.iloc[ind:(ind+load_n_images)], crop_p=crop_p, crop=crop)  # optimize later
+            imgs = dataset.load_cropped_images(info.iloc[ind:(ind+load_n_images)], crop_p=crop_p, crop=crop)  # optimize later
             imgs = preprocess_input(imgs)
             all_proba[jnd_0+2*jnd,:,:] = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
             all_proba[jnd_0+2*jnd+1,:,:] = model.predict(np.flip(imgs, axis=2), batch_size=const.BATCH_SIZE_PREDICT)
@@ -95,8 +96,8 @@ def predict_wcr_vote(info, label_encoder, load_n_images=1024, crop_p=0.1, n_crop
             pred[ind + knd]=c_res['max_p'].idxmax()
             max_p[ind + knd]=c_res.loc[pred[ind + knd]]['max_p']
 
-        print(ind,'/',len(info), '  -->', pred[ind], max_p[ind])
-    print(len(info),'/',len(info), '  -->', pred[-1], max_p[-1])
+        print(ind, '/', len(info), '  -->', pred[ind], max_p[ind])
+    print(len(info), '/', len(info), '  -->', pred[-1], max_p[-1])
 
     return pred, max_p
 
@@ -116,10 +117,8 @@ def validate(info, label_encoder, load_n_images=1024, wcr=False, crop_p=0.1):
     y_true = y[sort_ind]
 
     GAP = np.sum(np.cumsum(pred == y_true) * (pred == y_true) / np.arange(1, len(y_true) + 1)) / np.sum(y_true >= 0.)
-
     print("accuracy:", binary_acc, "\n ")
     print("*** GAP:", GAP, "***")
-
     return binary_acc, GAP
 
 
