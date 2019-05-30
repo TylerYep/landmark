@@ -53,7 +53,14 @@ def load_data(type='train'):
         return info, (label_encoder, one_hot_encoder)
 
     elif type == 'test':
-        test_info = pd.read_csv(const.TEST_CSV, index_col='id')
+        info = test_info
+        path = const.TEST_PATH
+        info = pd.read_csv(const.TEST_CSV, index_col='id')
+
+        image_ids = info.index.values
+        image_files = [path + id + '.jpg' for id in image_ids]
+        info['filename'] = pd.Series(image_files, index=image_ids)
+
         return test_info, label_encoder
 
 
