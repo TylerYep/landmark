@@ -14,10 +14,10 @@ def main():
 
 
 def test_results_to_csv(model, test_info, label_encoder):
-    # dev_binary_acc_wcr, dev_GAP_wcr = validate(model, dev_info, label_encoder, 1024, wcr=True, crop_p=0.1)
-    # test_pred, test_max_p = predict(model, test_info, label_encoder, 1024)
+    # dev_binary_acc_wcr, dev_GAP_wcr = validate(model, dev_info, label_encoder, wcr=True, crop_p=0.1)
+    # test_pred, test_max_p = predict(model, test_info, label_encoder)
 
-    test_pred, test_max_p = predict_wcr_vote(model, test_info, label_encoder, 512)
+    test_pred, test_max_p = predict_wcr_vote(model, test_info, label_encoder)
 
     predictions = pd.DataFrame(columns=['landmarks'], index=test_info.index)
     predictions['landmarks'] = [str(int(tp)) + ' %.16g' % pp for tp, pp in zip(test_pred, test_max_p)]
@@ -60,11 +60,10 @@ def predict(model, info, label_encoder, load_n_images=1024):
 # This is a version with 12 crops, for the competition I found that
 # 22 crops with crop_p=0.05 and crop_p=0.15 worked even better.
 def predict_wcr_vote(model, info, label_encoder, load_n_images=1024, crop_p=0.1, n_crops=12):
-    n = len(info)
-    max_p = np.zeros(n)
-    pred = np.zeros(n)
+    max_p = np.zeros(len(info))
+    pred = np.zeros(len(info))
 
-    for ind in range(0,len(info),load_n_images):
+    for ind in range(0, len(info), load_n_images):
         all_proba = np.zeros((n_crops, min(load_n_images, len(info)-ind), const.N_CAT))
 
         imgs = dataset.load_images(info.iloc[ind:(ind+load_n_images)])
@@ -76,7 +75,7 @@ def predict_wcr_vote(model, info, label_encoder, load_n_images=1024, crop_p=0.1,
 
         crops = ['upper left', 'lower left', 'upper right', 'lower right', 'central']
         jnd_0 = 2
-        for jnd,crop in enumerate(crops):
+        for jnd, crop in enumerate(crops):
             imgs = dataset.load_cropped_images(info.iloc[ind:(ind+load_n_images)], crop_p=crop_p, crop=crop)  # optimize later
             imgs = preprocess_input(imgs)
             all_proba[jnd_0+2*jnd,:,:] = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
@@ -93,8 +92,8 @@ def predict_wcr_vote(model, info, label_encoder, load_n_images=1024, crop_p=0.1,
         for knd in range(imgs.shape[0]):
             c_res = pd.DataFrame({'max_cat':cpred[:,knd], 'max_p':cmax_p[:,knd]})
             c_res = c_res.groupby('max_cat').aggregate('sum') / n_crops
-            pred[ind + knd]=c_res['max_p'].idxmax()
-            max_p[ind + knd]=c_res.loc[pred[ind + knd]]['max_p']
+            pred[ind + knd] = c_res['max_p'].idxmax()
+            max_p[ind + knd] = c_res.loc[pred[ind + knd]]['max_p']
 
         print(ind, '/', len(info), '  -->', pred[ind], max_p[ind])
     print(len(info), '/', len(info), '  -->', pred[-1], max_p[-1])
