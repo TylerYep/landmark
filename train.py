@@ -95,10 +95,8 @@ def get_custom_loss(rank_weight=1., epsilon=1.e-9):
         rank_losses = ranks*(-y_t_cat*tf.log(pred_cat+epsilon)-(1.-y_t_cat)*tf.log(1.-pred_cat+epsilon))
 
         return rank_losses + losses
-        return rank_losses + losses
-        return rank_losses + losses
-        return rank_losses + losses
-        return rank_losses + losses
-        return rank_losses + losses
+    return custom_loss
 
-train(validate=True)
+if __name__ == '__main__':
+    train(validate=True)
+
