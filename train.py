@@ -69,7 +69,7 @@ def train(validate=False):
                         epochs=const.NUM_EPOCHS,
                         callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3])
     model.save_weights(const.SAVE_PATH + 'dd_final.h5')
-    validation_set()
+    
     # K.eval(gm_exp)
 
 '''

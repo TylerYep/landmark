@@ -43,7 +43,7 @@ def load_data(type='train'):
         # train_info = train_info_full.loc[train_image_ids]
         info = train_info if type == 'train' else dev_info
         path = const.TRAIN_PATH if type == 'train' else const.DEV_PATH      # Equivalent
-        
+
         image_ids = info.index.values
         image_files = [path + id + '.jpg' for id in image_ids]
         info['filename'] = pd.Series(image_files, index=image_ids)
@@ -54,7 +54,7 @@ def load_data(type='train'):
 
     elif type == 'test':
         test_info = pd.read_csv(const.TEST_CSV, index_col='id')
-        return test_info
+        return test_info, label_encoder
 
 
 
@@ -146,7 +146,6 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
             print('Shuffling Data...')
             # info = info df.set_index(np.random.permutation(info.index)) # broken, supposedly
             info = info.iloc[np.random.permutation(np.arange(len(info)))]
-            print(info.head(3))
             # info = info.sample(frac=1)
             count = 0
 

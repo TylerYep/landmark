@@ -1,32 +1,26 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from models import Baseline, Sirius
 import const
-from keras import models
 
-# model = models.load_model(const.BEST_SAVE_MODEL)
+def main():
+    model = Baseline().model
+    model.load_weights(const.BEST_SAVE_MODEL)
+    test_info, label_encoder = load_data(type='test')
+    test_results_to_csv(model, test_info, label_encoder)
 
 
-# TODO create label encoder
+def test_results_to_csv(model, test_info, label_encoder):
+    # dev_binary_acc_wcr, dev_GAP_wcr = validate(dev_info, label_encoder, 1024, wcr=True, crop_p=0.1)
+    # test_pred, test_max_p = predict(test_info, label_encoder, 1024)
 
-def validation_set():
-    # Validate only on landmark images
-    # dev_binary_acc, dev_GAP = validate(dev_info, 50)
-
-    # Validate on landmark and non-landmark images
-    # dev_binary_acc, dev_GAP = validate(pd.concat([dev_info, nlm_dev_df]).sample(frac=1), 1024)
-
-    dev_binary_acc_wcr, dev_GAP_wcr = validate(dev_info, 1024, wcr=True, crop_p=0.1)
-
-    # test_pred, test_max_p = predict(test_info, 1024)
-    test_pred, test_max_p = predict_wcr_vote(test_info, 512, crop_p=0.1)
-
+    test_pred, test_max_p = predict_wcr_vote(test_info, label_encoder, 512)
 
     predictions = pd.DataFrame(columns=['landmarks'], index=test_info.index)
-    predictions['landmarks'] = [str(int(tp))+' '+ '%.16g' % pp for tp, pp in zip(test_pred, test_max_p)]
+    predictions['landmarks'] = [str(int(tp)) + ' %.16g' % pp for tp, pp in zip(test_pred, test_max_p)]
 
-    test_info_full = pd.read_csv('data/test.csv', index_col=0)
+    test_info_full = pd.read_csv(const.TEST_CSV, index_col=0)
 
     # Fill the missing values with the most common landmark
     missing = test_info_full[test_info_full.index.isin(test_info.index)!=True]
@@ -37,18 +31,16 @@ def validation_set():
 
     sorted_predictions = pd.DataFrame(index=test_info_full.index)
     sorted_predictions['landmarks'] = completed_predictions['landmarks']
-
-    sorted_predictions.to_csv('prediction_c12.csv')
-
+    sorted_predictions.to_csv('save/first_submission.csv')
 
 
 #### Validation and prediction
-def predict(info, load_n_images=1024):
+def predict(info, label_encoder, load_n_images=1024):
     n = len(info)
     max_p = np.zeros(n)
     pred = np.zeros(n)
 
-    for ind in range(0,len(info),load_n_images):
+    for ind in range(0,len(info), load_n_images):
         imgs = load_images(info.iloc[ind:(ind+load_n_images)])
         imgs = preprocess_input(imgs)
         proba = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
@@ -65,7 +57,7 @@ def predict(info, load_n_images=1024):
 
 # This is a version with 12 crops, for the competition I found that
 # 22 crops with crop_p=0.05 and crop_p=0.15 worked even better.
-def predict_wcr_vote(info, load_n_images=1024, crop_p=0.1, n_crops = 12):
+def predict_wcr_vote(info, label_encoder, load_n_images=1024, crop_p=0.1, n_crops=12):
     n = len(info)
     max_p = np.zeros(n)
     pred = np.zeros(n)
@@ -78,19 +70,15 @@ def predict_wcr_vote(info, load_n_images=1024, crop_p=0.1, n_crops = 12):
 
         #full image
         all_proba[0,:,:] = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
-        all_proba[1,:,:] = model.predict(np.flip(imgs, axis=2),
-                                         batch_size=const.BATCH_SIZE_PREDICT)
+        all_proba[1,:,:] = model.predict(np.flip(imgs, axis=2), batch_size=const.BATCH_SIZE_PREDICT)
 
         crops = ['upper left', 'lower left', 'upper right', 'lower right', 'central']
         jnd_0 = 2
         for jnd,crop in enumerate(crops):
-            imgs = load_cropped_images(info.iloc[ind:(ind+load_n_images)],
-                                  crop_p=crop_p, crop=crop)  # optimize later
+            imgs = load_cropped_images(info.iloc[ind:(ind+load_n_images)], crop_p=crop_p, crop=crop)  # optimize later
             imgs = preprocess_input(imgs)
-            all_proba[jnd_0+2*jnd,:,:] = model.predict(imgs,
-                                                       batch_size=const.BATCH_SIZE_PREDICT)
-            all_proba[jnd_0+2*jnd+1,:,:] = model.predict(np.flip(imgs, axis=2),
-                                                         batch_size=const.BATCH_SIZE_PREDICT)
+            all_proba[jnd_0+2*jnd,:,:] = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
+            all_proba[jnd_0+2*jnd+1,:,:] = model.predict(np.flip(imgs, axis=2), batch_size=const.BATCH_SIZE_PREDICT)
 
         cmax_p = np.zeros((n_crops,imgs.shape[0]))
         cpred = np.zeros((n_crops,imgs.shape[0]))
@@ -112,11 +100,11 @@ def predict_wcr_vote(info, load_n_images=1024, crop_p=0.1, n_crops = 12):
     return pred, max_p
 
 
-def validate(info, load_n_images=1024, wcr=False, crop_p=0.1):
+def validate(info, label_encoder, load_n_images=1024, wcr=False, crop_p=0.1):
     if wcr:
-        pred, max_p = predict_wcr_vote(info, load_n_images=load_n_images, crop_p=crop_p)
+        pred, max_p = predict_wcr_vote(info, label_encoder, load_n_images=load_n_images, crop_p=crop_p)
     else:
-        pred, max_p = predict(info, load_n_images=load_n_images)
+        pred, max_p = predict(info, label_encoder, load_n_images=load_n_images)
 
     y = info['landmark_id'].values
     binary_acc = accuracy_score(y, pred)
@@ -132,3 +120,7 @@ def validate(info, load_n_images=1024, wcr=False, crop_p=0.1):
     print("*** GAP:", GAP, "***")
 
     return binary_acc, GAP
+
+
+if __name__ == '__main__':
+    main()
