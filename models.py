@@ -31,7 +31,7 @@ class Sirius():
 
         # bilinear pooling layer
         X_f = compact_bilinear_pooling_layer(output_dim=8192)([X_f, X_f])
-        c = X_f.shape[]
+        c = X_f.shape
         # top layers for classification
         X_f = top_model(X_f)
 

@@ -61,7 +61,6 @@ def load_data(type='train'):
         return dev_info, (label_encoder, one_hot_encoder)
 
     elif type == 'test':
-
         test_image_files = glob.glob(const.TEST_PATH + '*.jpg')
         test_image_ids = [image_file.replace('.jpg', '').replace(const.TEST_PATH, '') \
                             for image_file in test_image_files]
@@ -69,6 +68,7 @@ def load_data(type='train'):
         test_info = test_info_full.loc[test_image_ids]
         test_info['filename'] = pd.Series(test_image_files, index=test_image_ids)
         return test_info,(label_encoder, one_hot_encoder)
+
 
 # ### Image i/o and image data augmentation
 # Standard keras image augmentation is used and in addition random crops (with slighter additional augmentation) are scaled to full resolution. Since the original images have a higher resolution than this model, the crops will contain additional information.
@@ -126,24 +126,22 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
     label_encoder, one_hot_encoder = encoders
 
     if image_aug:
-        datagen = ImageDataGenerator(
-            rotation_range=4.,
-            width_shift_range=0.2,
-            height_shift_range=0.2,
-            shear_range=0.2,
-            zoom_range=0.5,
-            channel_shift_range=25,
-            horizontal_flip=True,
-            fill_mode='nearest')
+        datagen = ImageDataGenerator(rotation_range=4.,
+                                    width_shift_range=0.2,
+                                    height_shift_range=0.2,
+                                    shear_range=0.2,
+                                    zoom_range=0.5,
+                                    channel_shift_range=25,
+                                    horizontal_flip=True,
+                                    fill_mode='nearest')
 
         if crop_prob > 0:
-            datagen_crop = ImageDataGenerator(
-                rotation_range=4.,
-                shear_range=0.2,
-                zoom_range=0.1,
-                channel_shift_range=20,
-                horizontal_flip=True,
-                fill_mode='nearest')
+            datagen_crop = ImageDataGenerator(rotation_range=4.,
+                                            shear_range=0.2,
+                                            zoom_range=0.1,
+                                            channel_shift_range=20,
+                                            horizontal_flip=True,
+                                            fill_mode='nearest')
 
     count = len(info_arg)
     while True:
@@ -157,7 +155,10 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
 
         # shuffle data
         if shuffle and count >= len(info):
-            info = info.sample(frac=1)
+            print('Shuffling Data...')
+            # info = info df.set_index(np.random.permutation(info.index)) # broken, supposedly
+            info = info.iloc[np.random.permutation(np.arange(len(info)))]
+            # info = info.sample(frac=1)
             count = 0
 
         # load images
@@ -193,6 +194,13 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
         return pd.concat([train_info, nlm_df])
 
 if __name__ == '__main__':
-    train_info = load_data(type='train')
-    # dev_info = load_data(type='dev')
-    # test_info = load_data(type='test')
+    train_info, (label_encoder, one_hot_encoder) = load_data(type='train')
+    gen = get_image_gen(pd.concat([train_info]), encoders,
+                                      eq_dist=False,
+                                      n_ref_imgs=256,
+                                      crop_prob=0.5,
+                                      crop_p=0.5)
+    for imgs, y_oh in gen:
+        print(imgs, y_oh)
+        break
+
