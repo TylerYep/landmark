@@ -3,8 +3,9 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import const
+from keras import models
 
-model = models.load_model(const.BEST_SAVE_MODEL)
+# model = models.load_model(const.BEST_SAVE_MODEL)
 
 
 # TODO create label encoder

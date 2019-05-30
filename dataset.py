@@ -41,7 +41,9 @@ def load_data(type='train'):
         # train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
         # train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') for image_file in train_image_files]
         # train_info = train_info_full.loc[train_image_ids]
+        info = train_info if type == 'train' else dev_info
         path = const.TRAIN_PATH if type == 'train' else const.DEV_PATH      # Equivalent
+        
         image_ids = info.index.values
         image_files = [path + id + '.jpg' for id in image_ids]
         info['filename'] = pd.Series(image_files, index=image_ids)
