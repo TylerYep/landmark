@@ -60,7 +60,7 @@ def load_data(type='train'):
         image_files = [path + id + '.jpg' for id in image_ids]
         info['filename'] = pd.Series(image_files, index=image_ids)
 
-        return test_info, label_encoder
+        return info, label_encoder
 
 
 
