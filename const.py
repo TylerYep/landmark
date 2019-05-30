@@ -1,4 +1,4 @@
-RUN_ON_GPU = False
+RUN_ON_GPU = True
 import datetime
 import warnings
 import numpy as np

@@ -49,13 +49,12 @@ def load_data(type='train'):
         train_info['label'] = label_encoder.transform(train_info['landmark_id'].values)
         train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
         return train_info, (label_encoder, one_hot_encoder)
-
-    elif type == 'dev':
-        dev_image_files = glob.glob(const.DEV_PATH + '*.jpg')
-        dev_image_ids = [image_file.replace('.jpg', '').replace(const.DEV_PATH, '') \
-                            for image_file in dev_image_files]
-        dev_info = train_info.loc[dev_image_ids]
-        dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
+    elif type == "dev":
+	# dev_image_files = glob.glob(const.DEV_PATH + '*.jpg')
+        # dev_image_ids = [image_file.replace('.jpg', '').replace(const.DEV_PATH, '') \
+        #                    for image_file in dev_image_files]
+        # dev_info = train_info.loc[dev_image_ids]
+        # dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
 
         dev_info['label'] = label_encoder.transform(dev_info['landmark_id'].values)
         dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))

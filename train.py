@@ -5,14 +5,13 @@ import keras
 import keras.backend as K
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, TensorBoard
-
 from models import Baseline, Sirius
 from util import batch_GAP
 import dataset
 import const
 import layers
 
-def train():
+def train(validate=False):
     K.clear_session()
 
     model = Baseline().model
@@ -46,21 +45,27 @@ def train():
                                       n_ref_imgs=256,
                                       crop_prob=0.5,
                                       crop_p=0.5)
-
-    # dev_set = dataset.load_data(type="dev")
-    # dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
-    #                                   eq_dist=False,
-    #                                   n_ref_imgs=256,
-    #                                   crop_prob=0.5,
-    #                                   crop_p=0.5)
+    if validate:
+    	dev_set, encoders = dataset.load_data(type="dev")
+    	dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
+                                    eq_dist=False,
+                                    n_ref_imgs=256,
+                                    crop_prob=0.5,
+                                    crop_p=0.5)
 
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=const.LOG_DIR)
 
-    model.fit_generator(train_gen,
+    if validate:
+   	 model.fit_generator(train_gen,
                         steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8,
                         epochs=const.NUM_EPOCHS,
+                        callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3],
+                        validation_data=dev_gen, validation_steps=1)    
+    else:
+         model.fit_generator(train_gen,
+                        steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8, 
+                        epochs=const.NUM_EPOCHS,
                         callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3])
-                        # validation_data=(x_val, y_val))
     model.save_weights(const.SAVE_PATH + 'dd_final.h5')
     # K.eval(gm_exp)
 
@@ -90,8 +95,10 @@ def get_custom_loss(rank_weight=1., epsilon=1.e-9):
         rank_losses = ranks*(-y_t_cat*tf.log(pred_cat+epsilon)-(1.-y_t_cat)*tf.log(1.-pred_cat+epsilon))
 
         return rank_losses + losses
-    return custom_loss
+        return rank_losses + losses
+        return rank_losses + losses
+        return rank_losses + losses
+        return rank_losses + losses
+        return rank_losses + losses
 
-
-if __name__ == "__main__":
-    train()
+train(validate=True)
