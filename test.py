@@ -14,10 +14,10 @@ def main():
 
 
 def test_results_to_csv(model, test_info, label_encoder):
-    # dev_binary_acc_wcr, dev_GAP_wcr = validate(dev_info, label_encoder, 1024, wcr=True, crop_p=0.1)
-    # test_pred, test_max_p = predict(test_info, label_encoder, 1024)
+    # dev_binary_acc_wcr, dev_GAP_wcr = validate(model, dev_info, label_encoder, 1024, wcr=True, crop_p=0.1)
+    # test_pred, test_max_p = predict(model, test_info, label_encoder, 1024)
 
-    test_pred, test_max_p = predict_wcr_vote(test_info, label_encoder, 512)
+    test_pred, test_max_p = predict_wcr_vote(model, test_info, label_encoder, 512)
 
     predictions = pd.DataFrame(columns=['landmarks'], index=test_info.index)
     predictions['landmarks'] = [str(int(tp)) + ' %.16g' % pp for tp, pp in zip(test_pred, test_max_p)]
@@ -37,7 +37,7 @@ def test_results_to_csv(model, test_info, label_encoder):
 
 
 #### Validation and prediction
-def predict(info, label_encoder, load_n_images=1024):
+def predict(model, info, label_encoder, load_n_images=1024):
     n = len(info)
     max_p = np.zeros(n)
     pred = np.zeros(n)
@@ -59,7 +59,7 @@ def predict(info, label_encoder, load_n_images=1024):
 
 # This is a version with 12 crops, for the competition I found that
 # 22 crops with crop_p=0.05 and crop_p=0.15 worked even better.
-def predict_wcr_vote(info, label_encoder, load_n_images=1024, crop_p=0.1, n_crops=12):
+def predict_wcr_vote(model, info, label_encoder, load_n_images=1024, crop_p=0.1, n_crops=12):
     n = len(info)
     max_p = np.zeros(n)
     pred = np.zeros(n)
@@ -102,11 +102,11 @@ def predict_wcr_vote(info, label_encoder, load_n_images=1024, crop_p=0.1, n_crop
     return pred, max_p
 
 
-def validate(info, label_encoder, load_n_images=1024, wcr=False, crop_p=0.1):
+def validate(model, info, label_encoder, load_n_images=1024, wcr=False, crop_p=0.1):
     if wcr:
-        pred, max_p = predict_wcr_vote(info, label_encoder, load_n_images=load_n_images, crop_p=crop_p)
+        pred, max_p = predict_wcr_vote(model, info, label_encoder, load_n_images=load_n_images, crop_p=crop_p)
     else:
-        pred, max_p = predict(info, label_encoder, load_n_images=load_n_images)
+        pred, max_p = predict(model, info, label_encoder, load_n_images=load_n_images)
 
     y = info['landmark_id'].values
     binary_acc = accuracy_score(y, pred)
