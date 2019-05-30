@@ -30,44 +30,30 @@ def load_data(type='train'):
     """
     train_info = pd.read_csv(const.TRAIN_CSV, index_col='id')
     dev_info = pd.read_csv(const.DEV_CSV, index_col='id')
-    total_df = pd.concat([train_info, dev_info])
 
+    total_df = pd.concat([train_info, dev_info])
     label_encoder = LabelEncoder()
     label_encoder.fit(total_df['landmark_id'].values)
     one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
 
-    if type == 'train':
-        ### Takes all images from the data/train folder
+    if type in ('train', 'dev'):
+        ### Takes all images from the data/train folder ###
         # train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
         # train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') for image_file in train_image_files]
         # train_info = train_info_full.loc[train_image_ids]
+        path = const.TRAIN_PATH if type == 'train' else const.DEV_PATH      # Equivalent
+        image_ids = info.index.values
+        image_files = [path + id + '.jpg' for id in image_ids]
+        info['filename'] = pd.Series(image_files, index=image_ids)
 
-        train_image_ids = train_info.index.values
-        train_image_files = [const.TRAIN_PATH + id + '.jpg' for id in train_image_ids]
-        train_info['filename'] = pd.Series(train_image_files, index=train_image_ids)
+        info['label'] = label_encoder.transform(info['landmark_id'].values)
+        info['one_hot'] = one_hot_encoder.fit_transform(info['label'].values.reshape(-1, 1))
+        return info, (label_encoder, one_hot_encoder)
 
-        train_info['label'] = label_encoder.transform(train_info['landmark_id'].values)
-        train_info['one_hot'] = one_hot_encoder.fit_transform(train_info['label'].values.reshape(-1, 1))
-        return train_info, (label_encoder, one_hot_encoder)
-    elif type == "dev":
-	# dev_image_files = glob.glob(const.DEV_PATH + '*.jpg')
-        # dev_image_ids = [image_file.replace('.jpg', '').replace(const.DEV_PATH, '') \
-        #                    for image_file in dev_image_files]
-        # dev_info = train_info.loc[dev_image_ids]
-        # dev_info['filename'] = pd.Series(dev_image_files, index=dev_image_ids)
+    elif type == 'test':
+        test_info = pd.read_csv(const.TEST_CSV, index_col='id')
+        return test_info
 
-        dev_info['label'] = label_encoder.transform(dev_info['landmark_id'].values)
-        dev_info['one_hot'] = one_hot_encoder.fit_transform(dev_info['label'].values.reshape(-1, 1))
-        return dev_info, (label_encoder, one_hot_encoder)
-
-    elif type == 'test': # TODO
-        test_image_files = glob.glob(const.TEST_PATH + '*.jpg')
-        test_image_ids = [image_file.replace('.jpg', '').replace(const.TEST_PATH, '') \
-                            for image_file in test_image_files]
-
-        test_info = test_info_full.loc[test_image_ids]
-        test_info['filename'] = pd.Series(test_image_files, index=test_image_ids)
-        return test_info,(label_encoder, one_hot_encoder)
 
 
 # ### Image i/o and image data augmentation

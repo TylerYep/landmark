@@ -14,7 +14,7 @@ def validation_set():
     # dev_binary_acc, dev_GAP = validate(dev_info, 50)
 
     # Validate on landmark and non-landmark images
-    dev_binary_acc, dev_GAP = validate(pd.concat([dev_info, nlm_dev_df]).sample(frac=1), 1024)
+    # dev_binary_acc, dev_GAP = validate(pd.concat([dev_info, nlm_dev_df]).sample(frac=1), 1024)
 
     dev_binary_acc_wcr, dev_GAP_wcr = validate(dev_info, 1024, wcr=True, crop_p=0.1)
 
@@ -23,10 +23,9 @@ def validation_set():
 
 
     predictions = pd.DataFrame(columns=['landmarks'], index=test_info.index)
-    predictions['landmarks'] = [str(int(tp))+' '+ '%.16g' % pp
-                                for tp,pp in zip(test_pred, test_max_p)]
+    predictions['landmarks'] = [str(int(tp))+' '+ '%.16g' % pp for tp, pp in zip(test_pred, test_max_p)]
 
-    test_info_full = pd.read_csv('test.csv', index_col=0)
+    test_info_full = pd.read_csv('data/test.csv', index_col=0)
 
     # Fill the missing values with the most common landmark
     missing = test_info_full[test_info_full.index.isin(test_info.index)!=True]
