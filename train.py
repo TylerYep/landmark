@@ -11,8 +11,6 @@ import dataset
 import const
 import layers
 
-from test import validation_set
-
 def train():
     K.clear_session()
 
@@ -48,8 +46,8 @@ def train():
                                       crop_prob=0.5,
                                       crop_p=0.5)
 
-	dev_set, encoders = dataset.load_data(type='dev')
-	dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
+    dev_set, encoders = dataset.load_data(type='dev')
+    dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
                                     eq_dist=False,
                                     n_ref_imgs=256,
                                     crop_prob=0.5,
