@@ -17,7 +17,7 @@ def test_results_to_csv(model, test_info, label_encoder):
     # dev_binary_acc_wcr, dev_GAP_wcr = validate(model, dev_info, label_encoder, wcr=True, crop_p=0.1)
     # test_pred, test_max_p = predict(model, test_info, label_encoder)
 
-    test_pred, test_max_p = predict_wcr_vote(model, test_info, label_encoder)
+    test_pred, test_max_p = predict(model, test_info, label_encoder)
 
     predictions = pd.DataFrame(columns=['landmarks'], index=test_info.index)
     predictions['landmarks'] = [str(int(tp)) + ' %.16g' % pp for tp, pp in zip(test_pred, test_max_p)]
@@ -25,7 +25,7 @@ def test_results_to_csv(model, test_info, label_encoder):
     test_info_full = pd.read_csv(const.TEST_CSV, index_col=0)
 
     # Fill the missing values with the most common landmark
-    missing = test_info_full[test_info_full.index.isin(test_info.index)!=True]
+    missing = test_info_full[test_info_full.index.isin(test_info.index) != True]
     missing_predictions = pd.DataFrame(index=missing.index)
     missing_predictions['landmarks'] = '9633 0.0'
 
@@ -42,14 +42,15 @@ def predict(model, info, label_encoder, load_n_images=1024):
     max_p = np.zeros(n)
     pred = np.zeros(n)
 
-    for ind in range(0,len(info), load_n_images):
+    for ind in range(0, len(info), load_n_images):
         imgs = dataset.load_images(info.iloc[ind:(ind+load_n_images)])
         imgs = preprocess_input(imgs)
         proba = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
+        print(proba)
 
         pred_i = np.argmax(proba, axis=1)
-        max_p[ind:(ind + load_n_images)] = proba[np.arange(len(pred_i)), pred_i]
-        pred[ind:(ind + load_n_images)] = label_encoder.inverse_transform(pred_i)
+        max_p[ind:(ind+load_n_images)] = proba[np.arange(len(pred_i)), pred_i]
+        pred[ind:(ind+load_n_images)] = label_encoder.inverse_transform(pred_i)
 
         print(ind, '/', len(info), '  -->', pred[ind], max_p[ind])
     print(len(info), '/', len(info), '  -->', pred[-1], max_p[-1])

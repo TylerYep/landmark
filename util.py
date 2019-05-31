@@ -20,31 +20,13 @@ def batch_GAP(y_t, y_p):
     return GAP
 
 
-def random_guess():
-    train_df = pd.read_csv(os.path.join(const.DATA_PATH, 'train.csv'))
-    test_df = pd.read_csv(os.path.join(const.DATA_PATH, 'test.csv'))
-    submit_df = pd.read_csv(os.path.join(const.DATA_PATH, 'sample_submission.csv'))
-
-    # take the most frequent label
-    freq_label = train_df['landmark_id'].value_counts() / train_df['landmark_id'].value_counts().sum()
-
-    submit_df['landmarks'] = '%d %2.2f' % (int(freq_label.index[0]), freq_label.values[0])
-    # submit_df.to_csv('submission.csv', index=False)
-
-    r_idx = lambda : np.random.choice(freq_label.index, p=freq_label.values)
-    r_score = lambda idx: '%d %2.4f' % (freq_label.index[idx], freq_label.values[idx])
-
-    submit_df['landmarks'] = submit_df.id.map(lambda _: r_score(r_idx()))
-    submit_df.to_csv('train/rand_submission.csv', index=False)
-
-
-def print_image(train_info, train_image_files, train_image_ids):
+def show_image(info, image_id):
     import cv2
     import matplotlib.pyplot as plt
-    print("Landmark_id of image", train_image_files[0], ":",
-          train_info.loc[train_image_ids[0]]['landmark_id'])
-    testimg = cv2.cvtColor(cv2.imread(np.random.choice(train_image_files)), cv2.COLOR_BGR2RGB)
-    plt.imshow(testimg)
+    print("Landmark_id of image %d : %d" % image_id, info.loc[image_id]['landmark_id'])
+    img = cv2.cvtColor(cv2.imread('data/' + image_id + '.jpg'), cv2.COLOR_BGR2RGB)
+    plt.imshow(img)
+    plt.show()
 
 
 def GAP_vector(pred, conf, true):
