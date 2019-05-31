@@ -34,15 +34,17 @@ def load_data(type='train'):
     total_df = pd.concat([train_info, dev_info])
     label_encoder = LabelEncoder()
     label_encoder.fit(total_df['landmark_id'].values)
-    one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
+
+    paths = {'train': const.TRAIN_PATH, 'dev': const.DEV_PATH, 'test': const.TEST_PATH}
+    path = paths[type]
 
     if type in ('train', 'dev'):
+        one_hot_encoder = OneHotEncoder(sparse=True, n_values=const.N_CAT)
         ### Takes all images from the data/train folder ###
         # train_image_files = [const.TRAIN_PATH + file for file in os.listdir(const.TRAIN_PATH) if file.endswith('.jpg')]
         # train_image_ids = [image_file.replace('.jpg', '').replace(const.TRAIN_PATH, '') for image_file in train_image_files]
         # train_info = train_info_full.loc[train_image_ids]
         info = train_info if type == 'train' else dev_info
-        path = const.TRAIN_PATH if type == 'train' else const.DEV_PATH      # Equivalent
 
         image_ids = info.index.values
         image_files = [path + id + '.jpg' for id in image_ids]
@@ -53,7 +55,6 @@ def load_data(type='train'):
         return info, (label_encoder, one_hot_encoder)
 
     elif type == 'test':
-        path = const.TEST_PATH
         info = pd.read_csv(const.TEST_CSV, index_col='id')
 
         image_ids = info.index.values

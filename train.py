@@ -13,7 +13,7 @@ import layers
 
 from test import validation_set
 
-def train(validate=False):
+def train():
     K.clear_session()
 
     model = Baseline().model
@@ -47,9 +47,9 @@ def train(validate=False):
                                       n_ref_imgs=256,
                                       crop_prob=0.5,
                                       crop_p=0.5)
-    if validate:
-    	dev_set, encoders = dataset.load_data(type='dev')
-    	dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
+
+	dev_set, encoders = dataset.load_data(type='dev')
+	dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
                                     eq_dist=False,
                                     n_ref_imgs=256,
                                     crop_prob=0.5,
@@ -57,19 +57,14 @@ def train(validate=False):
 
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=const.LOG_DIR)
 
-    if validate:
-        model.fit_generator(train_gen,
-                        steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8,
-                        epochs=const.NUM_EPOCHS,
-                        callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3],
-                        validation_data=dev_gen, validation_steps=1)
-    else:
-        model.fit_generator(train_gen,
-                        steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8,
-                        epochs=const.NUM_EPOCHS,
-                        callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3])
+    model.fit_generator(train_gen,
+                    steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8,
+                    epochs=const.NUM_EPOCHS,
+                    callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3],
+                    validation_data=dev_gen, validation_steps=1)
+
     model.save_weights(const.SAVE_PATH + 'dd_final.h5')
-    
+
     # K.eval(gm_exp)
 
 '''
@@ -101,4 +96,4 @@ def get_custom_loss(rank_weight=1., epsilon=1.e-9):
     return custom_loss
 
 if __name__ == '__main__':
-    train(validate=True)
+    train()
