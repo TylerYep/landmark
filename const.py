@@ -21,7 +21,7 @@ TRAIN_CSV = DATA_PATH + 'train-subset.csv'
 DEV_CSV = DATA_PATH + 'dev.csv'
 TEST_CSV = DATA_PATH + 'test.csv'
 
-BEST_SAVE_MODEL = SAVE_PATH + 'dd_final.h5'
+BEST_SAVE_MODEL = SAVE_PATH + 'checkpoint-3-best.h5'
 
 ### CHANGE THESE SETTINGS ON LOCAL ###
 if not RUN_ON_GPU:
