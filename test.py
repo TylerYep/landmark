@@ -45,13 +45,13 @@ def predict(model, info, label_encoder, load_n_images=1024):
     for ind in range(0, len(info), load_n_images):
         imgs = dataset.load_images(info.iloc[ind:(ind+load_n_images)])
         imgs = preprocess_input(imgs)
+      
+        #print(imgs[0])
+        #print(imgs[1])
         proba = model.predict(imgs, batch_size=const.BATCH_SIZE_PREDICT)
-
         pred_i = np.argmax(proba, axis=1)
         max_p[ind:(ind+load_n_images)] = proba[np.arange(len(pred_i)), pred_i]
         pred[ind:(ind+load_n_images)] = label_encoder.inverse_transform(pred_i)
-        print(pred_i)
-        print(pred[ind:(ind+load_n_images)])
 
         print(ind, '/', len(info), '  -->', pred[ind], max_p[ind])
     print(len(info), '/', len(info), '  -->', pred[-1], max_p[-1])

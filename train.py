@@ -45,7 +45,9 @@ def train():
                                       n_ref_imgs=256,
                                       crop_prob=0.5,
                                       crop_p=0.5)
-
+    for imgs, y_oh in train_gen:
+        print(imgs[0], y_oh)
+        break
     dev_set, encoders = dataset.load_data(type='dev')
     dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
                                     eq_dist=False,
