@@ -77,7 +77,7 @@ def load_images(info, input_shape=const.INPUT_SHAPE):
         try:
             img = cv2.cvtColor(cv2.resize(cv2.imread(fname),input_shape), cv2.COLOR_BGR2RGB)
         except:
-            print('Warning: could not read image: ' + fname + '. Using black img instead.')
+            print('IMAGE READ WARNING: could not read image: '+ fname + '. Used black img instead.')
             img = np.zeros((input_shape[0], input_shape[1], 3))
         imgs[i,:,:,:] = img
     return imgs
@@ -195,4 +195,3 @@ if __name__ == '__main__':
     for imgs, y_oh in gen:
         print(imgs[0], y_oh)
         break
-
