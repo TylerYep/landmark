@@ -73,6 +73,7 @@ def load_images(info, input_shape=const.INPUT_SHAPE):
 
     for i in range(len(info)):
         fname = info.iloc[i]['filename']
+        print(fname)
         try:
             img = cv2.cvtColor(cv2.resize(cv2.imread(fname),input_shape), cv2.COLOR_BGR2RGB)
         except:
