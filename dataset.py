@@ -74,12 +74,9 @@ def load_images(info, input_shape=const.INPUT_SHAPE):
     for i in range(len(info)):
         fname = info.iloc[i]['filename']
         try:
-            img = cv2.cvtColor(
-                  cv2.resize(cv2.imread(fname),input_shape),
-                  cv2.COLOR_BGR2RGB)
+            img = cv2.cvtColor(cv2.resize(cv2.imread(fname),input_shape), cv2.COLOR_BGR2RGB)
         except:
-            warnings.warn('Warning: could not read image: '+ fname +
-                          '. Use black img instead.')
+            print('Warning: could not read image: ' + fname + '. Using black img instead.')
             img = np.zeros((input_shape[0], input_shape[1], 3))
         imgs[i,:,:,:] = img
     return imgs
@@ -151,7 +148,6 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
         # shuffle data
         if shuffle and count >= len(info):
             print('Shuffling Data...')
-            # info = info df.set_index(np.random.permutation(info.index)) # broken, supposedly
             info = info.iloc[np.random.permutation(np.arange(len(info)))]
             # info = info.sample(frac=1)
             count = 0
