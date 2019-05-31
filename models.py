@@ -27,19 +27,13 @@ class Sirius():
         spatial_attn = layers.SpatialAttn()
 
         X_image = Input(list(const.INPUT_SHAPE) + [3])
-        X_f = x_model(X_image)
-
-        # bilinear pooling layer
-        X_f = compact_bilinear_pooling_layer(X_f, X_f, output_dim=8192)
-        # c = X_f.shape
-        print(X_f.shape)
+        X_f = x_model(X_image) # (b, 10, 10, 2048)
+        X_f = compact_bilinear_pooling_layer(X_f, X_f, output_dim=8192) # (b, 8192)
+        X_f = Reshape((4, 4, 512))(X_f)
         # X_f = spatial_attn(X_f)
-
-        # top layers for classification
         X_f = top_model(X_f)
 
         self.model = Model(inputs=X_image, outputs=X_pool, name='Sirius')
-
 
 
 ''' Model helper methods '''

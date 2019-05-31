@@ -35,7 +35,7 @@ if not RUN_ON_GPU:
 
 ##### GPU SETTINGS #####
 else:
-    CONTINUE_TRAIN = True
+    CONTINUE_TRAIN = False
     BATCH_SIZE = 32
     BATCH_SIZE_PREDICT = 32
     train_df = pd.read_csv(TRAIN_CSV)

@@ -12,11 +12,11 @@ class SpatialAttn(Layer):
         # global cross-channel averaging, e.g. (32,2048,24,8)
         batch_size, _, h, w = x.shape
         x = K.mean(x, axis=1, keepdims=True)  # e.g. (32,1,24,8)
-        x = K.reshape(x, (batch_size, -1))    # e.g. (32,192)
+        x = K.reshape(x, -1)    # e.g. (32,192)
         row_sum = K.sum(x, axis=0, keepdims=True)
         normalize = K.repeat_elements(row_sum, rep=batch_size, axis=0)
         z = Lambda(lambda k: k[0] / k[1])([x, normalize])
-        z = K.reshape(z, (batch_size, 1, h, w))
+        z = K.reshape(z, (1, h, w))
         return z
 
 if __name__ == '__main__':
