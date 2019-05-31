@@ -28,13 +28,13 @@ class Sirius():
 
         X_image = Input(list(const.INPUT_SHAPE) + [3])
         X_f = x_model(X_image)
-        # d = X_f.shape
+        print(X_f.shape)
 
         # bilinear pooling layer
         X_f = compact_bilinear_pooling_layer(output_dim=8192)([X_f, X_f])
         # c = X_f.shape
-
-        X_f = spatial_attn(X_f)
+        print(X_f.shape)
+        # X_f = spatial_attn(X_f)
 
         # top layers for classification
         X_f = top_model(X_f)
