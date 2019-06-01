@@ -64,3 +64,7 @@ if __name__ == '__main__':
     print(df_train.nunique())
     print(df_dev.nunique())
     print(pd.concat([df_train, df_dev]).nunique())
+    
+
+    print ("total number of images in train: " + str(len(df_train)))
+    print ("total number of images in dev: " + str(len(df_dev)))
