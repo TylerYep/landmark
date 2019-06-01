@@ -1,7 +1,7 @@
 import tensorflow as tf
 import keras
 from keras import Model
-from keras.layers import Dense, Dropout, Input, Activation, Lambda, Reshape
+from keras.layers import Dense, Dropout, Input, Activation, Lambda, Reshape, Multiply
 from keras.applications.xception import Xception
 import const
 import layers
@@ -27,12 +27,19 @@ class Sirius():
         spatial_attn = layers.SpatialAttn()
 
         X_image = Input(list(const.INPUT_SHAPE) + [3])
-        X_f = x_model(X_image) # (b, 10, 10, 2048)
-        X_f = Lambda(lambda x: compact_bilinear_pooling_layer(x, x, output_dim=8192))(X_f) # (b, 8192)
-        X_f = Reshape((2, 2, 2048))(X_f)
-        # X_f = spatial_attn(X_f)
-        X_f = top_model(X_f)
+        X_f = x_model(X_image)          # (b, 10, 10, 2048)
+        if const.RUN_ON_GPU:
+            X_f = Lambda(lambda x: compact_bilinear_pooling_layer(x, x, output_dim=819200))(X_f) # (b, 819200)
+            X_f = Reshape((8192, 10, 10))(X_f)
+        else:
+            X_f = Reshape((2048, 10, 10))(X_f)
 
+        # Spatial Attention is elementwise multiplied with the original
+        attn = spatial_attn(X_f) # input = (b, 2048, 10, 10), output = (b, 1, 10, 10)
+        X_f = Multiply()([X_f, attn])
+        X_f = Reshape((10, 10, 2048))(X_f) # last dim must be 2048 ... but we can change it to 8192
+
+        X_f = top_model(X_f)
         self.model = Model(inputs=X_image, outputs=X_f, name='Sirius')
 
 

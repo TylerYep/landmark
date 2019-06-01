@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 import tensorflow as tf
+import matplotlib.pyplot as plt
 import pandas as pd
 import keras
 import keras.backend as K
@@ -14,8 +14,8 @@ import layers
 def train():
     K.clear_session()
 
-    model = Baseline().model
-    # model = Sirius().model
+    # model = Baseline().model
+    model = Sirius().model
 
     if const.CONTINUE_TRAIN:
         model.load_weights(const.SAVE_PATH + 'dd_final.h5')

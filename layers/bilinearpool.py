@@ -116,8 +116,7 @@ class CompactBilinearPooling(Layer):
 
 def count_sketch(h, s, x, d):
     print(h,s,x)
-    outputs = tf.scan(fn=__count_sketch,
-                    elems=[h, s, x])
+    outputs = tf.scan(fn=__count_sketch, elems=[h, s, x])
     return outputs[-1] # We are interested only in the last value
 
 def __count_sketch(h, s, v, y): # Sequences,  # Outputs info
