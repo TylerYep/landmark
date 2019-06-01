@@ -15,14 +15,14 @@ def train():
     K.clear_session()
 
     model = Baseline().model
-   # model = Sirius().model
+    # model = Sirius().model
 
     if const.CONTINUE_TRAIN:
         model.load_weights(const.SAVE_PATH + 'dd_final.h5')
         print(model.summary())
 
     opt = Adam(lr=3e-4)
-    loss = 'categorical_crossentropy' # get_custom_loss(1.0) or 'binary_crossentropy'
+    loss = get_custom_loss(1.0) # 'categorical_crossentropy' or 'binary_crossentropy'
 
     def binary_crossentropy_n_cat(y_t, y_p):
         # This is just a reweighting to yield larger numbers for the loss.

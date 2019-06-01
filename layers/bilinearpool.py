@@ -115,7 +115,6 @@ class CompactBilinearPooling(Layer):
 #     return
 
 def count_sketch(h, s, x, d):
-
     print(h,s,x)
     outputs = tf.scan(fn=__count_sketch,
                     elems=[h, s, x])

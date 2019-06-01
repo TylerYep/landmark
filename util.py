@@ -20,11 +20,12 @@ def batch_GAP(y_t, y_p):
     return GAP
 
 
-def show_image(info, image_id):
+def show_image(image_id):
     import cv2
     import matplotlib.pyplot as plt
-    print("Landmark_id of image %d : %d" % image_id, info.loc[image_id]['landmark_id'])
-    img = cv2.cvtColor(cv2.imread('data/' + image_id + '.jpg'), cv2.COLOR_BGR2RGB)
+    info = pd.read_csv(const.TRAIN_CSV, index_col='id')
+    print("Landmark_id of image {} : {}".format(image_id, info.loc[image_id]['landmark_id']))
+    img = cv2.cvtColor(cv2.imread(const.TRAIN_PATH + str(image_id) + '.jpg'), cv2.COLOR_BGR2RGB)
     plt.imshow(img)
     plt.show()
 

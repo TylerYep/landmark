@@ -9,6 +9,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.xception import preprocess_input
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import const
+import util
 
 '''
 #### Data preparation
@@ -186,11 +187,12 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
 
 if __name__ == '__main__':
     train_info, encoders = load_data(type='train')
-    gen = get_image_gen(pd.concat([train_info]), encoders,
-                                      eq_dist=False,
-                                      n_ref_imgs=256,
-                                      crop_prob=0.5,
-                                      crop_p=0.5)
-    for imgs, y_oh in gen:
-        print(imgs[0], y_oh)
-        break
+    util.show_image(train_info, '9479f4fe90c95ccf')
+    # gen = get_image_gen(pd.concat([train_info]), encoders,
+    #                                   eq_dist=False,
+    #                                   n_ref_imgs=256,
+    #                                   crop_prob=0.5,
+    #                                   crop_p=0.5)
+    # for imgs, y_oh in gen:
+    #     print(imgs[0], y_oh)
+    #     break
