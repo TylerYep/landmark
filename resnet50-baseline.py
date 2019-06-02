@@ -236,8 +236,8 @@ def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
         end = time.time()
 
         if i % PLT_FREQ == 0:
-            tbx.add_scalar('train/loss', losses.val, epoch*num_steps+i)
-            tbx.add_scalar('train/GAP', avg_score.val, epoch*num_steps+i)
+            tbx.add_scalar('train/loss', losses.val, (epoch-1)*num_steps+i)
+            tbx.add_scalar('train/GAP', avg_score.val, (epoch-1)*num_steps+i)
 
         if i % LOG_FREQ == 0:
             print(f'{epoch} [{i}/{num_steps}]\t'
