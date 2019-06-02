@@ -13,8 +13,8 @@ N_MOST_FREQUENT_ELEMS = 100   # Changing this number requires deleting the data/
 TAKE_N_OF_EACH = 50
 
 # Check subset-data to see if this constant is being used
-TRAIN_SIZE = 100000
-DEV_SIZE = 10000
+TRAIN_SIZE = 100
+DEV_SIZE = 10
 
 TRAIN_CSV = 'data/train-subset.csv'
 DEV_CSV = 'data/dev.csv'

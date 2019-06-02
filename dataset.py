@@ -138,6 +138,65 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
 
     count = len(info_arg)
     while True:
+        info = info_arg
+        print('Generate', len(info), 'for the next round.')
+
+        # shuffle data
+        if shuffle and count >= len(info):
+            print('Shuffling Data...')
+            info = info.iloc[np.random.permutation(np.arange(len(info)))]
+            count = 0
+
+        # load images
+        for ind in range(0, len(info), const.BATCH_SIZE):
+            count += const.BATCH_SIZE
+            y = info['landmark_id'].values[ind:(ind+const.BATCH_SIZE)]
+            if np.random.rand() < crop_prob:
+                imgs = load_cropped_images(info.iloc[ind:(ind+const.BATCH_SIZE)],
+                                           crop_p=crop_p*np.random.rand() + 0.01,
+                                           crop='random')
+                if image_aug:
+                    cflow = datagen_crop.flow(imgs, y, batch_size=imgs.shape[0], shuffle=True)
+                    imgs, y = next(cflow)
+            else:
+                imgs = load_images(info.iloc[ind:(ind+const.BATCH_SIZE)])
+                if image_aug:
+                    cflow = datagen.flow(imgs, y, batch_size=imgs.shape[0], shuffle=True)
+                    imgs, y = next(cflow)
+
+            imgs = preprocess_input(imgs)
+            y_l = label_encoder.transform(y[y>=0.])
+            y_oh = np.zeros((len(y), const.N_CAT))
+            y_oh[y >= 0., :] = one_hot_encoder.transform(y_l.reshape(-1,1)).todense()
+            yield imgs, y_oh
+
+    return pd.concat([train_info])
+
+'''
+def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=False, n_ref_imgs=16,
+                  crop_prob=0.5, crop_p=0.5):
+    label_encoder, one_hot_encoder = encoders
+
+    if image_aug:
+        datagen = ImageDataGenerator(rotation_range=4.,
+                                    width_shift_range=0.2,
+                                    height_shift_range=0.2,
+                                    shear_range=0.2,
+                                    zoom_range=0.5,
+                                    channel_shift_range=25,
+                                    horizontal_flip=True,
+                                    fill_mode='nearest')
+
+        if crop_prob > 0:
+            datagen_crop = ImageDataGenerator(rotation_range=4.,
+                                            shear_range=0.2,
+                                            zoom_range=0.1,
+                                            channel_shift_range=20,
+                                            horizontal_flip=True,
+                                            fill_mode='nearest')
+
+    count = len(info_arg)
+    while True:
         if eq_dist:
             def sample(df):
                 return df.sample(min(n_ref_imgs, len(df)))
@@ -184,15 +243,16 @@ def get_image_gen(info_arg, encoders, shuffle=True, image_aug=True, eq_dist=Fals
         return pd.concat([train_info])
     else:
         return pd.concat([train_info, nlm_df])
+'''
 
 if __name__ == '__main__':
     train_info, encoders = load_data(type='train')
-    util.show_image(train_info, '9479f4fe90c95ccf')
-    # gen = get_image_gen(pd.concat([train_info]), encoders,
-    #                                   eq_dist=False,
-    #                                   n_ref_imgs=256,
-    #                                   crop_prob=0.5,
-    #                                   crop_p=0.5)
-    # for imgs, y_oh in gen:
-    #     print(imgs[0], y_oh)
-    #     break
+    # util.show_image(train_info, '9479f4fe90c95ccf')
+    gen = get_image_gen(pd.concat([train_info]), encoders,
+                                      eq_dist=False,
+                                      n_ref_imgs=256,
+                                      crop_prob=0.5,
+                                      crop_p=0.5)
+    for imgs, y_oh in gen:
+        print(imgs[0], y_oh)
+        break

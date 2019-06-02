@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-df = pd.read_csv("data/train-old.csv")
+df = pd.read_csv("data/train-subset.csv")
 
 print (df.head())
 data_path = "data/images/train/"
@@ -12,9 +12,9 @@ print ("total examples: " + str(len(df)))
 print ("missing examples: " + str(len(df) - sum(img_exists)))
 
 df = df[img_exists == 1]
-print (len(df)) 
+print (len(df))
 
-df.to_csv("data/train.csv")
+df.to_csv("data/train-subset.csv")
 
 
 

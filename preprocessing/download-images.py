@@ -20,7 +20,8 @@ logging.basicConfig(filename='downloader.log', format="%(asctime)-15s %(levelnam
 if not os.path.exists('data/images'):
     os.mkdir('data/images')
 out_dir = 'data/images/{}'.format(const.CURRENT_FILE_SET)
-data_file = 'data/{}.csv'.format(const.CURRENT_FILE_SET)
+# data_file = 'data/{}.csv'.format(const.CURRENT_FILE_SET)
+data_file = const.TRAIN_CSV
 
 def parse_data(data_file):
     csvfile = open(data_file, 'r')
