@@ -70,7 +70,9 @@ class ImageDataset(Dataset):
 
         part = 1 if self.mode == 'test' else 2
         sample = Image.open(f'data/images/{self.mode}/{filename}.jpg')
-        assert sample.mode == 'RGB'
+        while sample.mode != 'RGB':
+            filename = self.df.id.values[index+1]
+            sample = Image.open(f'data/images/{self.mode}/{filename}.jpg')
 
         image = self.transforms(sample)
 
