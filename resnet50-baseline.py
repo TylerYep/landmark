@@ -18,8 +18,9 @@ from tensorboardX import SummaryWriter
 from PIL import Image
 from tqdm import tqdm
 
-RUN_ON_GPU = False
+RUN_ON_GPU = True
 CONTINUE_FROM = 'save/weights_2.pth'
+NUM_CLASSES = 6512
 MODE = 'test'
 if RUN_ON_GPU:
     MIN_SAMPLES_PER_CLASS = 100
@@ -306,6 +307,8 @@ if __name__ == '__main__':
         np.save('label_encoder.npy', label_encoder.classes_)
 
         model = torchvision.models.resnet50(pretrained=True)
+        model.avg_pool = nn.AdaptiveAvgPool2d(1)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
         if CONTINUE_FROM is not None: model.load_state_dict(torch.load(CONTINUE_FROM))
         model.avg_pool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
@@ -327,6 +330,8 @@ if __name__ == '__main__':
         label_encoder = LabelEncoder()
         label_encoder.classes_ = np.load('label_encoder.npy')
         model = torchvision.models.resnet50(pretrained=False)
+        model.avg_pool = nn.AdaptiveAvgPool2d(1)
+        model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
         model.load_state_dict(torch.load(CONTINUE_FROM))
         generate_submission(test_loader, model, label_encoder)
 
