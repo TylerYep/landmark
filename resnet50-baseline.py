@@ -312,8 +312,6 @@ if __name__ == '__main__':
         model.avg_pool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
         if CONTINUE_FROM is not None: model.load_state_dict(torch.load(CONTINUE_FROM))
-        model.avg_pool = nn.AdaptiveAvgPool2d(1)
-        model.fc = nn.Linear(model.fc.in_features, num_classes)
         if RUN_ON_GPU: model.cuda()
 
         criterion = nn.CrossEntropyLoss()
