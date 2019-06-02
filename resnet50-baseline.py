@@ -36,6 +36,7 @@ NUM_WORKERS = multiprocessing.cpu_count()
 MAX_STEPS_PER_EPOCH = 15000
 NUM_EPOCHS = 500
 LOG_FREQ = 500
+PLT_FREQ = 100
 NUM_TOP_PREDICTS = 20
 TIME_LIMIT = 9 * 60 * 60
 
@@ -234,17 +235,18 @@ def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
         batch_time.update(time.time() - end)
         end = time.time()
 
+        if i % PLT_FREQ == 0:
+            tbx.add_scalar('train/loss', losses.val, epoch*num_steps+i)
+            tbx.add_scalar('train/GAP', avg_score.val, epoch*num_steps+i)
+
         if i % LOG_FREQ == 0:
             print(f'{epoch} [{i}/{num_steps}]\t'
                         f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                         f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
                         f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})'
                         + lr_str)
+            torch.save(model.state_dict(), 'save/weights_' + str(epoch) + '.pth')
 
-        tbx.add_scalar('train/loss', losses.val, epoch*num_steps+i)
-        tbx.add_scalar('train/GAP', avg_score.val, epoch*num_steps+i)
-
-    torch.save(model.state_dict(), 'save/weights_' + str(epoch + 1) + '.pth')
     print(f' * average GAP on train {avg_score.avg:.4f}')
 
 def inference(data_loader: Any, model: Any) -> Tuple[torch.Tensor, torch.Tensor,
@@ -333,6 +335,7 @@ if __name__ == '__main__':
         model.avg_pool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
         model.load_state_dict(torch.load(CONTINUE_FROM))
+        if RUN_ON_GPU: model.cuda()
         generate_submission(test_loader, model, label_encoder)
 
     else:
