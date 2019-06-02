@@ -45,17 +45,17 @@ class ImageDataset(Dataset):
         self.mode = mode
 
         transforms_list = [transforms.Resize(INPUT_SHAPE)]
-        # if self.mode == 'train':
-        #     transforms_list.extend([
-        #         transforms.RandomHorizontalFlip(),
-        #         transforms.RandomChoice([
-        #             transforms.RandomResizedCrop(INPUT_SHAPE[0]),
-        #             transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
-        #             transforms.RandomAffine(degrees=15, translate=(0.2, 0.2),
-        #                                     scale=(0.8, 1.2), shear=15,
-        #                                     resample=Image.BILINEAR)
-        #         ])
-        #     ])
+        if self.mode == 'train':
+            transforms_list.extend([
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomChoice([
+                    transforms.RandomResizedCrop(INPUT_SHAPE[0]),
+                    transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
+                    transforms.RandomAffine(degrees=15, translate=(0.2, 0.2),
+                                            scale=(0.8, 1.2), shear=15,
+                                            resample=Image.BILINEAR)
+                ])
+            ])
 
         transforms_list.extend([
             transforms.ToTensor(),
