@@ -18,9 +18,10 @@ from tensorboardX import SummaryWriter
 from PIL import Image
 from tqdm import tqdm
 
-RUN_ON_GPU = True
+RUN_ON_GPU = False
+MODE = 'test'
 if RUN_ON_GPU:
-    MIN_SAMPLES_PER_CLASS = 50
+    MIN_SAMPLES_PER_CLASS = 100
     BATCH_SIZE = 64
 else:
     MIN_SAMPLES_PER_CLASS = 0
@@ -175,6 +176,26 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
 
     return train_loader, test_loader, label_encoder, num_classes
 
+
+def load_test_data() -> 'DataLoader[np.ndarray]':
+    torch.multiprocessing.set_sharing_strategy('file_system')
+    cudnn.benchmark = True
+    # only use classes which have at least MIN_SAMPLES_PER_CLASS samples
+    print('loading data...')
+    test_df = pd.read_csv(TEST_CSV, dtype=str)
+    print('test_df', test_df.shape)
+
+    # filter non-existing test images
+    exists = lambda img: os.path.exists(f'data/images/test/{img}.jpg')
+    test_df = test_df.loc[test_df.id.apply(exists)].copy()
+    print('test_df after filtering', test_df.shape)
+
+    test_dataset = ImageDataset(test_df, mode='test')
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE,
+                             shuffle=False, num_workers=NUM_WORKERS)
+    return test_loader
+
+
 def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
           epoch: int, lr_scheduler: Any, tbx: Any) -> None:
     print(f'epoch {epoch}')
@@ -220,7 +241,6 @@ def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
 
         tbx.add_scalar('train/loss', losses.val, epoch+i)
         tbx.add_scalar('train/GAP', avg_score.val, epoch+i)
-
 
     try:
         torch.save(model.state_dict(), 'save/weights_' + str(epoch + 1) + '.pth')
@@ -283,24 +303,32 @@ def generate_submission(test_loader: Any, model: Any, label_encoder: Any) -> np.
 
 
 if __name__ == '__main__':
-    global_start_time = time.time()
-    train_loader, test_loader, label_encoder, num_classes = load_data()
+    if MODE == 'train':
+        global_start_time = time.time()
+        train_loader, test_loader, label_encoder, num_classes = load_data()
+        np.save('label_encoder.npy', label_encoder.classes_)
 
-    model = torchvision.models.resnet50(pretrained=True)
-    model.avg_pool = nn.AdaptiveAvgPool2d(1)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    if RUN_ON_GPU: model.cuda()
+        model = torchvision.models.resnet50(pretrained=True)
+        model.avg_pool = nn.AdaptiveAvgPool2d(1)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+        if RUN_ON_GPU: model.cuda()
 
-    criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=LR_STEP,
-                                                   gamma=LR_FACTOR)
-    tbx = SummaryWriter('save/')
-    for epoch in range(1, NUM_EPOCHS + 1):
-        print('-' * 50)
-        train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, tbx)
-        lr_scheduler.step()
-
-    print('inference mode')
-    generate_submission(test_loader, model, label_encoder)
+        optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=LR_STEP, gamma=LR_FACTOR)
+        tbx = SummaryWriter('save/')
+        for epoch in range(1, NUM_EPOCHS + 1):
+            print('-' * 50)
+            train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, tbx)
+            lr_scheduler.step()
+    elif MODE == 'test':
+        print('inference mode')
+        test_loader = load_test_data()
+        label_encoder = LabelEncoder()
+        label_encoder.classes_ = np.load('label_encoder.npy')
+        model = torchvision.models.resnet50(pretrained=False)
+        model.load_state_dict(torch.load('./weights_100.pth'))
+        generate_submission(test_loader, model, label_encoder)
+    else:
+        print('Please choose a mode! -Tyler')

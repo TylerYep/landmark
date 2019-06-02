@@ -3,6 +3,7 @@ data/*
 !data/sample_submission.csv
 logs/
 *.h5
+*.pth
 
 ####################
 
