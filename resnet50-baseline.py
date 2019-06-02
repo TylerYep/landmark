@@ -45,17 +45,17 @@ class ImageDataset(Dataset):
         self.mode = mode
 
         transforms_list = [transforms.Resize(INPUT_SHAPE)]
-        if self.mode == 'train':
-            transforms_list.extend([
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomChoice([
-                    transforms.RandomResizedCrop(INPUT_SHAPE[0]),
-                    transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
-                    transforms.RandomAffine(degrees=15, translate=(0.2, 0.2),
-                                            scale=(0.8, 1.2), shear=15,
-                                            resample=Image.BILINEAR)
-                ])
-            ])
+        # if self.mode == 'train':
+        #     transforms_list.extend([
+        #         transforms.RandomHorizontalFlip(),
+        #         transforms.RandomChoice([
+        #             transforms.RandomResizedCrop(INPUT_SHAPE[0]),
+        #             transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
+        #             transforms.RandomAffine(degrees=15, translate=(0.2, 0.2),
+        #                                     scale=(0.8, 1.2), shear=15,
+        #                                     resample=Image.BILINEAR)
+        #         ])
+        #     ])
 
         transforms_list.extend([
             transforms.ToTensor(),
@@ -183,7 +183,7 @@ def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
     end = time.time()
     lr_str = ''
 
-    for i, (input_, target) in enumerate(train_loader):
+    for i, (input_, target) in enumerate(tqdm(train_loader)):
         if i >= num_steps:
             break
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -224,7 +224,7 @@ def inference(data_loader: Any, model: Any) -> Tuple[torch.Tensor, torch.Tensor,
     all_predicts, all_confs, all_targets = [], [], []
 
     with torch.no_grad():
-        for i, data in enumerate(tqdm(data_loader)):
+        for data in tqdm(data_loader):
             if data_loader.dataset.mode != 'test':
                 input_, target = data
             else:
