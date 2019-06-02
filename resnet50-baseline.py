@@ -19,6 +19,7 @@ from PIL import Image
 from tqdm import tqdm
 
 RUN_ON_GPU = False
+CONTINUE_FROM = 'save/weights_2.pth'
 MODE = 'test'
 if RUN_ON_GPU:
     MIN_SAMPLES_PER_CLASS = 100
@@ -44,7 +45,7 @@ DEV_CSV = DATA_PATH + 'dev.csv'
 TEST_CSV = DATA_PATH + 'test.csv'
 
 class ImageDataset(Dataset):
-    def __init__(self, dataframe: pd.DataFrame, mode: str) -> None:
+    def __init__(self, dataframe: pd.DataFrame, mode: str):
         print(f'creating data loader - {mode}')
         assert mode in ['train', 'val', 'test']
 
@@ -239,14 +240,10 @@ def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
                         f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})'
                         + lr_str)
 
-        tbx.add_scalar('train/loss', losses.val, epoch+i)
-        tbx.add_scalar('train/GAP', avg_score.val, epoch+i)
+        tbx.add_scalar('train/loss', losses.val, epoch*num_steps+i)
+        tbx.add_scalar('train/GAP', avg_score.val, epoch*num_steps+i)
 
-    try:
-        torch.save(model.state_dict(), 'save/weights_' + str(epoch + 1) + '.pth')
-    except:
-        print("error saving weights")
-
+    torch.save(model.state_dict(), 'save/weights_' + str(epoch + 1) + '.pth')
     print(f' * average GAP on train {avg_score.avg:.4f}')
 
 def inference(data_loader: Any, model: Any) -> Tuple[torch.Tensor, torch.Tensor,
@@ -309,6 +306,7 @@ if __name__ == '__main__':
         np.save('label_encoder.npy', label_encoder.classes_)
 
         model = torchvision.models.resnet50(pretrained=True)
+        if CONTINUE_FROM is not None: model.load_state_dict(torch.load(CONTINUE_FROM))
         model.avg_pool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
         if RUN_ON_GPU: model.cuda()
@@ -322,13 +320,15 @@ if __name__ == '__main__':
             print('-' * 50)
             train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, tbx)
             lr_scheduler.step()
+
     elif MODE == 'test':
         print('inference mode')
         test_loader = load_test_data()
         label_encoder = LabelEncoder()
         label_encoder.classes_ = np.load('label_encoder.npy')
         model = torchvision.models.resnet50(pretrained=False)
-        model.load_state_dict(torch.load('./weights_100.pth'))
+        model.load_state_dict(torch.load(CONTINUE_FROM))
         generate_submission(test_loader, model, label_encoder)
+
     else:
         print('Please choose a mode! -Tyler')
