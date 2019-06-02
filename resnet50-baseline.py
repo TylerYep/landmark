@@ -16,12 +16,11 @@ from torch.utils.data import TensorDataset, DataLoader, Dataset
 from sklearn.preprocessing import LabelEncoder
 from PIL import Image
 from tqdm import tqdm
-import const
 
-RUN_ON_GPU = False
+RUN_ON_GPU = True
 MIN_SAMPLES_PER_CLASS = 0
-BATCH_SIZE = 16             # 512
-LEARNING_RATE = 1e-3
+BATCH_SIZE = 512
+LEARNING_RATE = 3e-4
 LR_STEP = 3
 LR_FACTOR = 0.5
 NUM_WORKERS = multiprocessing.cpu_count()
@@ -30,7 +29,12 @@ NUM_EPOCHS = 10000
 LOG_FREQ = 500
 NUM_TOP_PREDICTS = 20
 TIME_LIMIT = 9 * 60 * 60
+
 INPUT_SHAPE = (299, 299)
+DATA_PATH = 'data/'
+TRAIN_CSV = DATA_PATH + 'train-subset.csv'
+DEV_CSV = DATA_PATH + 'dev.csv'
+TEST_CSV = DATA_PATH + 'test.csv'
 
 class ImageDataset(Dataset):
     def __init__(self, dataframe: pd.DataFrame, mode: str) -> None:
@@ -127,7 +131,7 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
 
     # only use classes which have at least MIN_SAMPLES_PER_CLASS samples
     print('loading data...')
-    df = pd.read_csv(const.TRAIN_CSV)
+    df = pd.read_csv(TRAIN_CSV)
     df.drop(columns='url', inplace=True)
 
     counts = df.landmark_id.value_counts()
@@ -138,7 +142,7 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     train_df = df.loc[df.landmark_id.isin(selected_classes)].copy()
     print('train_df', train_df.shape)
 
-    test_df = pd.read_csv(const.TEST_CSV, dtype=str)
+    test_df = pd.read_csv(TEST_CSV, dtype=str)
     print('test_df', test_df.shape)
 
     # filter non-existing test images
