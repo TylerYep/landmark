@@ -14,18 +14,24 @@ import torch.backends.cudnn as cudnn
 
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 from sklearn.preprocessing import LabelEncoder
+from tensorboardX import SummaryWriter
 from PIL import Image
 from tqdm import tqdm
 
-RUN_ON_GPU = False
-MIN_SAMPLES_PER_CLASS = 0
-BATCH_SIZE = 512
-LEARNING_RATE = 3e-4
+RUN_ON_GPU = True
+if RUN_ON_GPU:
+    MIN_SAMPLES_PER_CLASS = 50
+    BATCH_SIZE = 64
+else:
+    MIN_SAMPLES_PER_CLASS = 0
+    BATCH_SIZE = 4
+
+LEARNING_RATE = 1e-3
 LR_STEP = 3
 LR_FACTOR = 0.5
 NUM_WORKERS = multiprocessing.cpu_count()
 MAX_STEPS_PER_EPOCH = 15000
-NUM_EPOCHS = 10000
+NUM_EPOCHS = 500
 LOG_FREQ = 500
 NUM_TOP_PREDICTS = 20
 TIME_LIMIT = 9 * 60 * 60
@@ -170,7 +176,7 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     return train_loader, test_loader, label_encoder, num_classes
 
 def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
-          epoch: int, lr_scheduler: Any) -> None:
+          epoch: int, lr_scheduler: Any, tbx: Any) -> None:
     print(f'epoch {epoch}')
     batch_time = AverageMeter()
     losses = AverageMeter()
@@ -212,8 +218,14 @@ def train(train_loader: Any, model: Any, criterion: Any, optimizer: Any,
                         f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})'
                         + lr_str)
 
-        if has_time_run_out():
-            break
+        tbx.add_scalar('train/loss', losses.val, epoch+i)
+        tbx.add_scalar('train/GAP', avg_score.val, epoch+i)
+
+
+    try:
+        torch.save(model.state_dict(), 'save/weights_' + str(epoch + 1) + '.pth')
+    except:
+        print("error saving weights")
 
     print(f' * average GAP on train {avg_score.avg:.4f}')
 
@@ -269,8 +281,6 @@ def generate_submission(test_loader: Any, model: Any, label_encoder: Any) -> np.
     sample_sub.update(sub)
     sample_sub.to_csv('submission.csv')
 
-def has_time_run_out() -> bool:
-    return time.time() - global_start_time > TIME_LIMIT - 500
 
 if __name__ == '__main__':
     global_start_time = time.time()
@@ -286,14 +296,11 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=LR_STEP,
                                                    gamma=LR_FACTOR)
-
+    tbx = SummaryWriter('save/')
     for epoch in range(1, NUM_EPOCHS + 1):
         print('-' * 50)
-        train(train_loader, model, criterion, optimizer, epoch, lr_scheduler)
+        train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, tbx)
         lr_scheduler.step()
 
-        if has_time_run_out():
-            break
-
     print('inference mode')
-    # generate_submission(test_loader, model, label_encoder)
+    generate_submission(test_loader, model, label_encoder)
