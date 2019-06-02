@@ -17,7 +17,7 @@ from sklearn.preprocessing import LabelEncoder
 from PIL import Image
 from tqdm import tqdm
 
-RUN_ON_GPU = True
+RUN_ON_GPU = False
 MIN_SAMPLES_PER_CLASS = 0
 BATCH_SIZE = 512
 LEARNING_RATE = 3e-4
@@ -44,9 +44,9 @@ class ImageDataset(Dataset):
         self.df = dataframe
         self.mode = mode
 
-        transforms_list = []
+        transforms_list = [transforms.Resize(INPUT_SHAPE)]
         if self.mode == 'train':
-            transforms_list = [
+            transforms_list.extend([
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomChoice([
                     transforms.RandomResizedCrop(INPUT_SHAPE[0]),
@@ -55,10 +55,9 @@ class ImageDataset(Dataset):
                                             scale=(0.8, 1.2), shear=15,
                                             resample=Image.BILINEAR)
                 ])
-            ]
+            ])
 
         transforms_list.extend([
-            transforms.Resize(INPUT_SHAPE),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                   std=[0.229, 0.224, 0.225]),
@@ -69,8 +68,7 @@ class ImageDataset(Dataset):
         ''' Returns: tuple (sample, target) '''
         filename = self.df.id.values[index]
 
-        part = 1 if self.mode == 'test' or filename[0] in '01234567' else 2
-        directory = 'test' if self.mode == 'test' else 'train_' + filename[0]
+        part = 1 if self.mode == 'test' else 2
         sample = Image.open(f'data/images/{self.mode}/{filename}.jpg')
         assert sample.mode == 'RGB'
 
