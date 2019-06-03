@@ -1,72 +1,43 @@
-import os
-import numpy as np
-import pandas as pd
-import tensorflow as tf
+import torch
 
-import const
+class AverageMeter:
+    ''' Computes and stores the average and current value '''
+    def __init__(self) -> None:
+        self.reset()
 
-# def get_run_name():
-#     dirlist = sorted([f for f in os.listdir('save/') if os.path.isdir(os.path.join('save/', f))])
-#     dirlist.sort(key=lambda k: (len(k), k)) # Sort alphabetically but by length
-#     if len(dirlist) == 0:
-#         result = 'A'
-#     else:
-#         last_run_char = dirlist[-1][-1]
-#         if last_run_char == 'Z':
-#             result = 'A' * (len(dirlist[-1])+1)
-#         else:
-#             result = dirlist[-1][:-1] + chr(ord(last_run_char) + 1)
-#     os.makedirs(os.path.join('save/', result))
-#     return result
+    def reset(self) -> None:
+        self.val = 0.0
+        self.avg = 0.0
+        self.sum = 0.0
+        self.count = 0
+
+    def update(self, val: float, n: int = 1) -> None:
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
 
 
-#### Additional metric
-# The GAP is estimated by calculating it on each batch during training.
-def batch_GAP(y_t, y_p):
-    pred_cat = tf.argmax(y_p, axis=-1)
-    y_t_cat = tf.argmax(y_t, axis=-1) * tf.cast(
-        tf.reduce_sum(y_t, axis=-1), tf.int64)
+def GAP(predicts: torch.Tensor, confs: torch.Tensor, targets: torch.Tensor) -> float:
+    ''' Simplified GAP@1 metric: only one prediction per sample is supported '''
+    assert len(predicts.shape) == 1
+    assert len(confs.shape) == 1
+    assert len(targets.shape) == 1
+    assert predicts.shape == confs.shape and confs.shape == targets.shape
 
-    n_pred = tf.shape(pred_cat)[0]
-    is_c = tf.cast(tf.equal(pred_cat, y_t_cat), tf.float32)
+    _, indices = torch.sort(confs, descending=True)
 
-    GAP = tf.reduce_mean(tf.cumsum(is_c) * is_c / tf.cast(tf.range(1, n_pred + 1),
-                         dtype=tf.float32))
-    return GAP
+    confs = confs.cpu().numpy()
+    predicts = predicts[indices].cpu().numpy()
+    targets = targets[indices].cpu().numpy()
 
+    res, true_pos = 0.0, 0
 
-def show_image(image_id):
-    import cv2
-    import matplotlib.pyplot as plt
-    info = pd.read_csv(const.TRAIN_CSV, index_col='id')
-    print("Landmark_id of image {} : {}".format(image_id, info.loc[image_id]['landmark_id']))
-    img = cv2.cvtColor(cv2.imread(const.TRAIN_PATH + str(image_id) + '.jpg'), cv2.COLOR_BGR2RGB)
-    plt.imshow(img)
-    plt.show()
+    for i, (c, p, t) in enumerate(zip(confs, predicts, targets)):
+        rel = int(p == t)
+        true_pos += rel
 
+        res += true_pos / (i + 1) * rel
 
-def GAP_vector(pred, conf, true):
-    '''
-    Compute Global Average Precision (aka micro AP), the metric for the
-    Google Landmark Recognition competition.
-    This function takes predictions, labels and confidence scores as vectors.
-    In both predictions and ground-truth, use None/np.nan for "no label".
-
-    Args:
-        pred: vector of integer-coded predictions
-        conf: vector of probability or confidence scores for pred
-        true: vector of integer-coded labels for ground truth
-        return_x: also return the data frame used in the calculation
-
-    Returns:
-        GAP score
-    '''
-    x = pd.DataFrame({'pred': pred, 'conf': conf, 'true': true})
-    x.sort_values('conf', ascending=False, inplace=True, na_position='last')
-
-    x['correct'] = (x.true == x.pred).astype(int)
-    x['prec_k'] = x.correct.cumsum() / (np.arange(len(x)) + 1)
-    x['term'] = x.prec_k * x.correct
-
-    gap = x.term.sum() / x.true.count()
-    return gap
+    res /= targets.shape[0] # FIX ME: incorrect, not all test images depict landmarks
+    return res

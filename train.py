@@ -1,96 +1,91 @@
-import tensorflow as tf
-import matplotlib.pyplot as plt
+#!/usr/bin/env python
+import os
+import time
+import numpy as np
 import pandas as pd
-import keras
-import keras.backend as K
-from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, TensorBoard
-from models import Baseline, Sirius
-from util import batch_GAP
-import dataset
+
+import torch
+import torch.nn as nn
+import torchvision
+
+from sklearn.preprocessing import LabelEncoder
+from tensorboardX import SummaryWriter
+from cnn_finetune import make_model
+from PIL import Image
+from tqdm import tqdm
+
 import const
-import layers
+from dataset import ImageDataset, load_data
+from util import AverageMeter, GAP
 
-def train():
-    K.clear_session()
+def train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, tbx):
+    print(f'Epoch {epoch}')
+    batch_time, losses, avg_score = AverageMeter(), AverageMeter(), AverageMeter()
 
-    # model = Baseline().model
-    model = Sirius().model
+    model.train()
+    num_steps = min(len(train_loader), const.MAX_STEPS_PER_EPOCH)
 
-    if const.CONTINUE_TRAIN:
-        model.load_weights(const.SAVE_PATH + 'dd_final.h5')
-        print(model.summary())
+    print(f'total batches: {num_steps}')
 
-    opt = Adam(lr=3e-4)
-    loss = get_custom_loss(1.0) # 'categorical_crossentropy' or 'binary_crossentropy'
+    end = time.time()
+    lr_str = ''
 
-    def binary_crossentropy_n_cat(y_t, y_p):
-        # This is just a reweighting to yield larger numbers for the loss.
-        return keras.metrics.binary_crossentropy(y_t, y_p) * const.N_CAT
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    for i, (input_, target) in enumerate(tqdm(train_loader)):
+        if i >= num_steps:
+            break
+        input_ = input_.to(device)
+        target = target.to(device)
 
-    model.compile(loss=loss,
-                  optimizer=opt,
-                  metrics=[binary_crossentropy_n_cat, 'accuracy', batch_GAP])
+        output = model(input_)
+        loss = criterion(output, target)
 
-    checkpoint1 = ModelCheckpoint(const.SAVE_PATH + 'checkpoint-1.h5', save_weights_only=True)
-    checkpoint2 = ModelCheckpoint(const.SAVE_PATH + 'checkpoint-2.h5', save_weights_only=True)
-    checkpoint3 = ModelCheckpoint(const.SAVE_PATH + 'checkpoint-3-best.h5',
-                                  monitor='loss',
-                                  save_best_only=True,
-                                  save_weights_only=True)
+        confs, predicts = torch.max(output.detach(), dim=1)
+        avg_score.update(GAP(predicts, confs, target))
 
-    train_info, encoders = dataset.load_data(type='train')
-    train_gen = dataset.get_image_gen(pd.concat([train_info]), encoders,
-                                      eq_dist=False,
-                                      n_ref_imgs=256,
-                                      crop_prob=0.5,
-                                      crop_p=0.5)
+        losses.update(loss.data.item(), input_.size(0))
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-    dev_set, encoders = dataset.load_data(type='dev')
-    dev_gen = dataset.get_image_gen(pd.concat([dev_set]), encoders,
-                                    eq_dist=False,
-                                    n_ref_imgs=256,
-                                    crop_prob=0.5,
-                                    crop_p=0.5)
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=const.LOG_DIR)
+        if i % const.PLT_FREQ == 0:
+            tbx.add_scalar('train/loss', losses.val, (epoch-1)*num_steps+i)
+            tbx.add_scalar('train/GAP', avg_score.val, (epoch-1)*num_steps+i)
 
-    model.fit_generator(train_gen,
-                    steps_per_epoch=len(train_info) / const.BATCH_SIZE / 8,
-                    epochs=const.NUM_EPOCHS,
-                    callbacks=[tensorboard_callback, checkpoint1, checkpoint2, checkpoint3],
-                    validation_data=dev_gen, validation_steps=1)
+        if i % const.LOG_FREQ == 0:
+            print(f'{epoch} [{i}/{num_steps}]\t'
+                        f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                        f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
+                        f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})'
+                        + lr_str)
+            torch.save(model.state_dict(), 'save/weights_' + str(epoch) + '.pth')
 
-    model.save_weights(const.SAVE_PATH + 'dd_final.h5')
-    # K.eval(gm_exp)
+    print(f' * average GAP on train {avg_score.avg:.4f}')
 
-'''
-#### Custom loss function
-
-Individual losses are reweighted on each batch, but each output neuron will still always
-see a binary cross-entropy loss. In other words, the learning rate is simply higher for
-the most confident predictions.
-'''
-def get_custom_loss(rank_weight=1., epsilon=1.e-9):
-    def custom_loss(y_t, y_p):
-        losses = tf.reduce_sum(-y_t*tf.log(y_p+epsilon) - (1.-y_t)*tf.log(1.-y_p+epsilon), axis=-1)
-        pred_idx = tf.argmax(y_p, axis=-1)
-        mask = tf.one_hot(pred_idx,
-                          depth=y_p.shape[1],
-                          dtype=tf.bool,
-                          on_value=True,
-                          off_value=False)
-        pred_cat = tf.boolean_mask(y_p, mask)
-        y_t_cat = tf.boolean_mask(y_t, mask)
-
-        n_pred = tf.shape(pred_cat)[0]
-        _, ranks = tf.nn.top_k(pred_cat, k=n_pred)
-
-        ranks = tf.cast(n_pred-ranks, tf.float32)/tf.cast(n_pred, tf.float32)*rank_weight
-        rank_losses = ranks*(-y_t_cat*tf.log(pred_cat+epsilon)-(1.-y_t_cat)*tf.log(1.-pred_cat+epsilon))
-
-        return rank_losses + losses
-    return custom_loss
 
 if __name__ == '__main__':
-    train()
+    global_start_time = time.time()
+    train_loader, label_encoder, num_classes = load_data()
+    np.save('label_encoder.npy', label_encoder.classes_)
+
+    # model = make_model('xception', num_classes=const.NUM_CLASSES)
+    model = torchvision.models.resnet50(pretrained=True)
+    model.avg_pool = nn.AdaptiveAvgPool2d(1)
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    if const.RUN_ON_GPU:
+        if const.CONTINUE_FROM is not None:
+            model.load_state_dict(torch.load(const.CONTINUE_FROM))
+        model.cuda()
+
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=const.LEARNING_RATE)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=const.LR_STEP, gamma=const.LR_FACTOR)
+    tbx = SummaryWriter('save/')
+    for epoch in range(1, const.NUM_EPOCHS + 1):
+        print('-' * 50)
+        train(train_loader, model, criterion, optimizer, epoch, lr_scheduler, tbx)
+        lr_scheduler.step()
