@@ -96,11 +96,11 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     print('dev_df', dev_df.shape)
 
     # filter non-existing test images
-    exists = lambda img: os.path.exists(f'data/images/dev/{img}.jpg')
+    exists = lambda img: os.path.exists(f'data/images/train/{img}.jpg')
     dev_df = dev_df.loc[dev_df.id.apply(exists)].copy()
     print('dev_df after filtering', dev_df.shape)
 
-    dev_dataset = ImageDataset(dev_df, mode='test')
+    dev_dataset = ImageDataset(dev_df, mode='train')
     dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,
                              shuffle=False, num_workers=multiprocessing.cpu_count())
 
