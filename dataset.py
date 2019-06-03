@@ -9,7 +9,6 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset
 import torch.backends.cudnn as cudnn
 from sklearn.preprocessing import LabelEncoder
-
 import const
 
 class ImageDataset(Dataset):
@@ -101,7 +100,7 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     dev_df = dev_df.loc[dev_df.id.apply(exists)].copy()
     print('dev_df after filtering', dev_df.shape)
 
-    dev_dataset = ImageDataset(test_df, mode='test')
+    dev_dataset = ImageDataset(dev_df, mode='test')
     dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,
                              shuffle=False, num_workers=multiprocessing.cpu_count())
 

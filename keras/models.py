@@ -29,7 +29,7 @@ class Sirius():
         X_image = Input(list(const.INPUT_SHAPE) + [3])
         X_f = x_model(X_image)          # (b, 10, 10, 2048)
         if const.RUN_ON_GPU:
-            X_f = Lambda(lambda x: compact_bilinear_pooling_layer(x, x, output_dim=819200))(X_f) # (b, 819200)
+            X_f = Lambda(lambda x: compact_bilinear_pooling_layer(x, x, output_dim=8192))(X_f) # (b, 819200)
             X_f = Reshape((8192, 10, 10))(X_f)
         else:
             X_f = Reshape((2048, 10, 10))(X_f)
@@ -47,8 +47,7 @@ class Sirius():
 
 def build_xception_model(freeze_layers=85):
     x_model = Xception(input_shape=list(const.INPUT_SHAPE)+[3],
-                       weights='imagenet',
-                       include_top=False)
+                       weights='imagenet', include_top=False)
     for layer in x_model.layers:
         layer.trainable = True
     for layer in x_model.layers[:freeze_layers]:
