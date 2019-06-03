@@ -6,7 +6,7 @@ import pandas as pd
 
 import torch
 import torch.nn as nn
-import torch.optim
+import torch.optim as optim
 import torchvision
 
 from sklearn.preprocessing import LabelEncoder
@@ -19,7 +19,7 @@ import const
 from dataset import ImageDataset, load_data
 from util import AverageMeter, GAP
 
-def train(train_loader, model):
+def train(model, train_loader, dev_loader):
     global_start_time = time.time()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=const.LEARNING_RATE)
@@ -27,53 +27,62 @@ def train(train_loader, model):
     tbx = SummaryWriter('save/')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    num_steps = min(len(train_loader), const.MAX_STEPS_PER_EPOCH)
     print(f'total batches: {num_steps}')
 
     for epoch in range(1, const.NUM_EPOCHS + 1):
         print('-' * 50)
         print(f'Epoch {epoch}')
         batch_time, losses, avg_score = AverageMeter(), AverageMeter(), AverageMeter()
-        model.train()
+
         end = time.time()
+        for phase in ('train', 'val'):
+            if phase == 'train':
+                model.train()
+                dataloader = train_loader
+                num_steps = min(len(train_loader), const.MAX_STEPS_PER_EPOCH)
+            else:
+                model.eval()
+                dataloader = dev_loader
+                num_steps = min(len(dev_loader), const.MAX_STEPS_PER_EPOCH)
 
-        for i, (input_, target) in enumerate(tqdm(train_loader)):
-            if i >= num_steps:
-                break
-            input_ = input_.to(device)
-            target = target.to(device)
+            for i, (input_, target) in enumerate(tqdm(dataloader)):
+                if i >= num_steps:
+                    break
+                input_ = input_.to(device)
+                target = target.to(device)
 
-            output = model(input_)
-            loss = criterion(output, target)
+                output = model(input_)
+                loss = criterion(output, target)
 
-            confs, predicts = torch.max(output.detach(), dim=1)
-            avg_score.update(GAP(predicts, confs, target))
+                confs, predicts = torch.max(output.detach(), dim=1)
+                avg_score.update(GAP(predicts, confs, target))
+                losses.update(loss.data.item(), input_.size(0))
 
-            losses.update(loss.data.item(), input_.size(0))
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+                if phase == 'train':
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
 
-            batch_time.update(time.time() - end)
-            end = time.time()
+                batch_time.update(time.time() - end)
+                end = time.time()
 
-            if i % const.PLT_FREQ == 0:
-                tbx.add_scalar('train/loss', losses.val, (epoch-1)*num_steps+i)
-                tbx.add_scalar('train/GAP', avg_score.val, (epoch-1)*num_steps+i)
+                if i % const.PLT_FREQ == 0:
+                    tbx.add_scalar(phase + '/loss', losses.val, (epoch-1)*num_steps+i)
+                    tbx.add_scalar(phase + '/GAP', avg_score.val, (epoch-1)*num_steps+i)
 
-            if i % const.LOG_FREQ == 0:
-                print(f'{epoch} [{i}/{num_steps}]\t'
-                            f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                            f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
-                            f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})')
-                torch.save(model.state_dict(), 'save/weights_' + str((epoch-1)*num_steps+i) + '.pth')
+                if i % const.LOG_FREQ == 0 and phase == 'train':
+                    print(f'{epoch} [{i}/{num_steps}]\t'
+                                f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                                f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
+                                f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})')
+                    torch.save(model.state_dict(), 'save/weights_' + str((epoch-1)*num_steps+i) + '.pth')
 
         print(f' * average GAP on train {avg_score.avg:.4f}')
         lr_scheduler.step()
 
 
 if __name__ == '__main__':
-    train_loader, label_encoder, num_classes = load_data()
+    train_loader, dev_loader, label_encoder, num_classes = load_data()
     np.save('label_encoder.npy', label_encoder.classes_)
 
     if const.CURR_MODEL == 'xception':
@@ -89,4 +98,4 @@ if __name__ == '__main__':
             model.load_state_dict(torch.load(const.CONTINUE_FROM))
         model.cuda()
 
-    train(train_loader, model)
+    train(model, train_loader, dev_loader)

@@ -1,5 +1,5 @@
 RUN_ON_GPU = False
-CONTINUE_FROM = 'save/weights_5.pth'
+CONTINUE_FROM = None # 'save/weights_5.pth'
 MODELS = ('xception', 'resnet50')
 CURR_MODEL = MODELS[0]
 

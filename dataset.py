@@ -66,30 +66,46 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     cudnn.benchmark = True
 
     # only use classes which have at least const.MIN_SAMPLES_PER_CLASS samples
-    print('loading data...')
+    print('Loading data...')
     df = pd.read_csv(const.TRAIN_CSV)
     df.drop(columns='url', inplace=True)
 
     counts = df.landmark_id.value_counts()
     selected_classes = counts[counts >= const.MIN_SAMPLES_PER_CLASS].index
     num_classes = selected_classes.shape[0]
-    print('classes with at least N samples:', num_classes)
+    print('Classes with at least N samples:', num_classes)
 
     train_df = df.loc[df.landmark_id.isin(selected_classes)].copy()
     print('train_df', train_df.shape)
 
     label_encoder = LabelEncoder()
     label_encoder.fit(train_df.landmark_id.values)
-    print('found classes', len(label_encoder.classes_))
+    print('Found classes', len(label_encoder.classes_))
     assert len(label_encoder.classes_) == num_classes
 
     train_df.landmark_id = label_encoder.transform(train_df.landmark_id)
 
     train_dataset = ImageDataset(train_df, mode='train')
     train_loader = DataLoader(train_dataset, batch_size=const.BATCH_SIZE,
-                              shuffle=False, num_workers=multiprocessing.cpu_count(), drop_last=True)
+                              shuffle=True, num_workers=multiprocessing.cpu_count(), drop_last=True)
 
-    return train_loader, label_encoder, num_classes
+    ### DEV SET ###
+
+    dev_df = pd.read_csv(const.DEV_CSV)
+    dev_df.drop(columns='url', inplace=True)
+    dev_df = dev_df.loc[dev_df.landmark_id.isin(selected_classes)].copy()
+    print('dev_df', dev_df.shape)
+
+    # filter non-existing test images
+    exists = lambda img: os.path.exists(f'data/images/dev/{img}.jpg')
+    dev_df = dev_df.loc[dev_df.id.apply(exists)].copy()
+    print('dev_df after filtering', dev_df.shape)
+
+    dev_dataset = ImageDataset(test_df, mode='test')
+    dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,
+                             shuffle=False, num_workers=multiprocessing.cpu_count())
+
+    return train_loader, dev_loader, label_encoder, num_classes
 
 
 def load_test_data() -> 'DataLoader[np.ndarray]':
@@ -97,7 +113,7 @@ def load_test_data() -> 'DataLoader[np.ndarray]':
     cudnn.benchmark = True
 
     # only use classes which have at least const.MIN_SAMPLES_PER_CLASS samples
-    print('loading data...')
+    print('Loading data...')
     test_df = pd.read_csv(const.TEST_CSV, dtype=str)
     print('test_df', test_df.shape)
 
