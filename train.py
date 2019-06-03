@@ -22,22 +22,21 @@ from util import AverageMeter, GAP
 def train(train_loader, model):
     global_start_time = time.time()
     criterion = nn.CrossEntropyLoss()
-
     optimizer = optim.Adam(model.parameters(), lr=const.LEARNING_RATE)
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=const.LR_STEP, gamma=const.LR_FACTOR)
     tbx = SummaryWriter('save/')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    num_steps = min(len(train_loader), const.MAX_STEPS_PER_EPOCH)
+    print(f'total batches: {num_steps}')
 
     for epoch in range(1, const.NUM_EPOCHS + 1):
         print('-' * 50)
         print(f'Epoch {epoch}')
         batch_time, losses, avg_score = AverageMeter(), AverageMeter(), AverageMeter()
         model.train()
-        num_steps = min(len(train_loader), const.MAX_STEPS_PER_EPOCH)
-        print(f'total batches: {num_steps}')
         end = time.time()
-        lr_str = ''
 
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         for i, (input_, target) in enumerate(tqdm(train_loader)):
             if i >= num_steps:
                 break
@@ -66,8 +65,7 @@ def train(train_loader, model):
                 print(f'{epoch} [{i}/{num_steps}]\t'
                             f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                             f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
-                            f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})'
-                            + lr_str)
+                            f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})')
                 torch.save(model.state_dict(), 'save/weights_' + str((epoch-1)*num_steps+i) + '.pth')
 
         print(f' * average GAP on train {avg_score.avg:.4f}')

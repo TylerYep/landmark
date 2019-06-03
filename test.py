@@ -19,6 +19,7 @@ def inference(data_loader, model) -> Tuple[torch.Tensor, torch.Tensor, Optional[
     model.eval()
     activation = nn.Softmax(dim=1)
     all_predicts, all_confs, all_targets = [], [], []
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     with torch.no_grad():
         for data in tqdm(data_loader):
@@ -27,7 +28,8 @@ def inference(data_loader, model) -> Tuple[torch.Tensor, torch.Tensor, Optional[
             else:
                 input_, target = data, None
 
-            output = model(input_.cuda())
+            input = input_.to(device)
+            output = model(input)
             output = activation(output)
 
             confs, predicts = torch.topk(output, const.NUM_TOP_PREDICTS)
@@ -50,10 +52,8 @@ def generate_submission(test_loader, model, label_encoder) -> np.ndarray:
     predicts, confs = predicts_gpu.cpu().numpy(), confs_gpu.cpu().numpy()
 
     labels = [label_encoder.inverse_transform(pred) for pred in predicts]
-    print('labels')
-    print(np.array(labels))
-    print('confs')
-    print(np.array(confs))
+    print('labels', np.array(labels))
+    print('confs', np.array(confs))
 
     sub = test_loader.dataset.df
     def concat(label: np.ndarray, conf: np.ndarray) -> str:
@@ -70,13 +70,17 @@ if __name__ == '__main__':
     test_loader = load_test_data()
     label_encoder = LabelEncoder()
     label_encoder.classes_ = np.load('label_encoder.npy')
-    model = torchvision.models.resnet50(pretrained=False)
-    model.avg_pool = nn.AdaptiveAvgPool2d(1)
-    model.fc = nn.Linear(model.fc.in_features, const.NUM_CLASSES)
+    if const.CURR_MODEL == 'xception':
+        model = make_model('xception', num_classes=const.NUM_CLASSES)
+
+    elif const.CURR_MODEL == 'resnet50':
+        model = torchvision.models.resnet50(pretrained=True)
+        model.avg_pool = nn.AdaptiveAvgPool2d(1)
+        model.fc = nn.Linear(model.fc.in_features, const.NUM_CLASSES)
+
     if const.RUN_ON_GPU:
-        model.load_state_dict(torch.load(const.CONTINUE_FROM))
+        if const.CONTINUE_FROM is not None:
+            model.load_state_dict(torch.load(const.CONTINUE_FROM))
         model.cuda()
-    else:
-        model.load_state_dict(torch.load(const.CONTINUE_FROM, map_location='cpu'))
 
     generate_submission(test_loader, model, label_encoder)
