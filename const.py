@@ -1,7 +1,7 @@
 RUN_ON_GPU = False
 CONTINUE_FROM = None # 'save/weights_5.pth'
 MODELS = ('xception', 'resnet50')
-CURR_MODEL = MODELS[0]
+CURR_MODEL = MODELS[1]
 
 NUM_CLASSES = 6512
 if RUN_ON_GPU:
