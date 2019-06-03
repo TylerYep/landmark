@@ -84,7 +84,15 @@ if __name__ == '__main__':
     np.save('label_encoder.npy', label_encoder.classes_)
 
     if const.CURR_MODEL == 'xception':
-        model = make_model('xception', num_classes=num_classes)
+        model = make_model('xception', num_classes=num_classes, pretrained=True,
+                           pool=nn.AdaptiveAvgPool2d(1))
+        c = 0
+        for layer in model.parameters():
+            if c < 85:
+                layer.requires_grad = False
+            else:
+                layer.requires_grad = True
+            c += 1
 
     elif const.CURR_MODEL == 'resnet50':
         model = torchvision.models.resnet50(pretrained=True)
