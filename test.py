@@ -79,8 +79,7 @@ if __name__ == '__main__':
         model.fc = nn.Linear(model.fc.in_features, const.NUM_CLASSES)
 
     if const.RUN_ON_GPU:
-        if const.CONTINUE_FROM is not None:
-            model.load_state_dict(torch.load(const.CONTINUE_FROM))
+        model.load_state_dict(torch.load(const.CONTINUE_FROM))
         model.cuda()
 
     generate_submission(test_loader, model, label_encoder)

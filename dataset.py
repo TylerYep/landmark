@@ -77,28 +77,27 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     train_df = df.loc[df.landmark_id.isin(selected_classes)].copy()
     print('train_df', train_df.shape)
 
-    label_encoder = LabelEncoder()
-    label_encoder.fit(train_df.landmark_id.values)
-    print('Found classes', len(label_encoder.classes_))
-    assert len(label_encoder.classes_) == num_classes
-
-    train_df.landmark_id = label_encoder.transform(train_df.landmark_id)
-
-    train_dataset = ImageDataset(train_df, mode='train')
-    train_loader = DataLoader(train_dataset, batch_size=const.BATCH_SIZE,
-                              shuffle=True, num_workers=multiprocessing.cpu_count(), drop_last=True)
-
-    ### DEV SET ###
-
     dev_df = pd.read_csv(const.DEV_CSV)
     dev_df.drop(columns='url', inplace=True)
     dev_df = dev_df.loc[dev_df.landmark_id.isin(selected_classes)].copy()
     print('dev_df', dev_df.shape)
 
-    # filter non-existing test images
-    exists = lambda img: os.path.exists(f'data/images/dev/{img}.jpg')
+    # filter non-existing dev images
+    exists = lambda img: os.path.exists(f'data/images/train/{img}.jpg')
     dev_df = dev_df.loc[dev_df.id.apply(exists)].copy()
     print('dev_df after filtering', dev_df.shape)
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(np.concatenate(train_df.landmark_id.values, dev_df.landmark_id.values))
+    print('Found classes', len(label_encoder.classes_))
+    assert len(label_encoder.classes_) == num_classes
+
+    train_df.landmark_id = label_encoder.transform(train_df.landmark_id)
+    dev_df.landmark_id = label_encoder.transform(dev_df.landmark_id)
+
+    train_dataset = ImageDataset(train_df, mode='train')
+    train_loader = DataLoader(train_dataset, batch_size=const.BATCH_SIZE,
+                              shuffle=True, num_workers=multiprocessing.cpu_count(), drop_last=True)
 
     dev_dataset = ImageDataset(dev_df, mode='test')
     dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,

@@ -10,6 +10,8 @@ class Xception(nn.Module):
         super().__init__()
         self.xception = make_model('xception', num_classes=n_classes, pretrained=True,
                                    pool=nn.AdaptiveMaxPool2d(1))
+        print(self.xception)
+        self.xception._classifier = None
         self.bilinearpool = CompactBilinearPooling(10, 10, 8192)
         self.spatial = SpatialAttn()
 
