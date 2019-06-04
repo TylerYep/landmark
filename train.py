@@ -24,7 +24,7 @@ def train(model, train_loader, dev_loader):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=const.LEARNING_RATE)
     # lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=const.LR_STEP, gamma=const.LR_FACTOR)
-    tbx = SummaryWriter('save/A/')
+    tbx = SummaryWriter(f'save/{const.RUN_ID}/')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     for epoch in range(1, const.NUM_EPOCHS + 1):
@@ -73,7 +73,7 @@ def train(model, train_loader, dev_loader):
                                 f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                                 f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
                                 f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})')
-                    torch.save(model.state_dict(), 'save/A/weights_' + str((epoch-1)*num_steps+i) + '.pth')
+                    torch.save(model.state_dict(), 'save/' + const.RUN_ID + '/weights_' + str((epoch-1)*num_steps+i) + '.pth')
 
         print(f' * average GAP on train {avg_score.avg:.4f}')
         # lr_scheduler.step()

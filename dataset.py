@@ -88,7 +88,7 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     print('dev_df after filtering', dev_df.shape)
 
     label_encoder = LabelEncoder()
-    label_encoder.fit(np.concatenate(train_df.landmark_id.values, dev_df.landmark_id.values))
+    label_encoder.fit(pd.concat([train_df, dev_df]).landmark_id.values)
     print('Found classes', len(label_encoder.classes_))
     assert len(label_encoder.classes_) == num_classes
 
