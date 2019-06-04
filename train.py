@@ -27,7 +27,7 @@ def train(model, train_loader, dev_loader):
     tbx = SummaryWriter(f'save/{const.RUN_ID}/')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    for epoch in range(1, const.NUM_EPOCHS + 1):
+    for e in range(const.NUM_EPOCHS):
         print('-' * 50)
         print(f'Epoch {epoch}')
         batch_time, losses, avg_score = AverageMeter(), AverageMeter(), AverageMeter()
@@ -43,6 +43,7 @@ def train(model, train_loader, dev_loader):
                 dataloader = dev_loader
                 num_steps = min(len(dev_loader), const.MAX_STEPS_PER_EPOCH)
 
+            epoch = const.LAST_SAVE / num_steps + e
             for i, (input_, target) in enumerate(tqdm(dataloader)):
                 if i >= num_steps:
                     break
@@ -65,15 +66,15 @@ def train(model, train_loader, dev_loader):
                 end = time.time()
 
                 if i % const.PLT_FREQ == 0:
-                    tbx.add_scalar(phase + '/loss', losses.val, (epoch-1)*num_steps+i)
-                    tbx.add_scalar(phase + '/GAP', avg_score.val, (epoch-1)*num_steps+i)
+                    tbx.add_scalar(phase + '/loss', losses.val, (epoch)*num_steps+i)
+                    tbx.add_scalar(phase + '/GAP', avg_score.val, (epoch)*num_steps+i)
 
                 if i % const.LOG_FREQ == 0 and phase == 'train':
                     print(f'{epoch} [{i}/{num_steps}]\t'
                                 f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                                 f'loss {losses.val:.4f} ({losses.avg:.4f})\t'
                                 f'GAP {avg_score.val:.4f} ({avg_score.avg:.4f})')
-                    torch.save(model.state_dict(), 'save/' + const.RUN_ID + '/weights_' + str((epoch-1)*num_steps+i) + '.pth')
+                    torch.save(model.state_dict(), 'save/' + const.RUN_ID + '/weights_' + str((epoch)*num_steps+i) + '.pth')
 
         print(f' * average GAP on train {avg_score.avg:.4f}')
         # lr_scheduler.step()

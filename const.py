@@ -1,6 +1,7 @@
 RUN_ON_GPU = True
 RUN_ID = 'B'
-CONTINUE_FROM = None # 'save/weights_5.pth'
+CONTINUE_FROM = f'save/{RUN_ID}weights_111000.pth'
+LAST_SAVE = 111000
 MODELS = ('xception', 'resnet50')
 CURR_MODEL = MODELS[0]
 
