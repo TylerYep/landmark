@@ -43,12 +43,12 @@ class ImageDataset(Dataset):
         ''' Returns: tuple (sample, target) '''
         filename = self.df.id.values[index]
 
-        part = 1 if self.mode == 'test' else 2
-        sample = Image.open(f'data/images/{self.mode}/{filename}.jpg')
+        folder = 'test' if self.mode == 'test' else 'train'
+        sample = Image.open(f'data/images/{folder}/{filename}.jpg')
         while sample.mode != 'RGB':
             index += 1
             filename = self.df.id.values[index]
-            sample = Image.open(f'data/images/{self.mode}/{filename}.jpg')
+            sample = Image.open(f'data/images/{folder}/{filename}.jpg')
 
         image = self.transforms(sample)
 
@@ -99,7 +99,7 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     train_loader = DataLoader(train_dataset, batch_size=const.BATCH_SIZE,
                               shuffle=True, num_workers=multiprocessing.cpu_count(), drop_last=True)
 
-    dev_dataset = ImageDataset(dev_df, mode='test')
+    dev_dataset = ImageDataset(dev_df, mode='val')
     dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,
                              shuffle=False, num_workers=multiprocessing.cpu_count())
 
