@@ -29,11 +29,11 @@ def train(model, train_loader, dev_loader):
 
     for e in range(const.NUM_EPOCHS):
         print('-' * 50)
-        print(f'Epoch {epoch}')
+        print(f'Epoch {e}')
         batch_time, losses, avg_score = AverageMeter(), AverageMeter(), AverageMeter()
 
         end = time.time()
-        for phase in ('train', 'val'):
+        for phase in ('train','val'):
             if phase == 'train':
                 model.train()
                 dataloader = train_loader
@@ -64,11 +64,12 @@ def train(model, train_loader, dev_loader):
 
                 batch_time.update(time.time() - end)
                 end = time.time()
+                
 
                 if i % const.PLT_FREQ == 0:
                     tbx.add_scalar(phase + '/loss', losses.val, (epoch)*num_steps+i)
                     tbx.add_scalar(phase + '/GAP', avg_score.val, (epoch)*num_steps+i)
-
+                
                 if i % const.LOG_FREQ == 0 and phase == 'train':
                     print(f'{epoch} [{i}/{num_steps}]\t'
                                 f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
