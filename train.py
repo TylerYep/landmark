@@ -18,6 +18,7 @@ from tqdm import tqdm
 import const
 from dataset import ImageDataset, load_data
 from util import AverageMeter, GAP
+from models import Exception
 
 def train(model, train_loader, dev_loader):
     global_start_time = time.time()
@@ -64,12 +65,12 @@ def train(model, train_loader, dev_loader):
 
                 batch_time.update(time.time() - end)
                 end = time.time()
-                
+
 
                 if i % const.PLT_FREQ == 0:
                     tbx.add_scalar(phase + '/loss', losses.val, (epoch)*num_steps+i)
                     tbx.add_scalar(phase + '/GAP', avg_score.val, (epoch)*num_steps+i)
-                
+
                 if i % const.LOG_FREQ == 0 and phase == 'train':
                     print(f'{epoch} [{i}/{num_steps}]\t'
                                 f'time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -100,6 +101,9 @@ if __name__ == '__main__':
         model = torchvision.models.resnet50(pretrained=True)
         model.avg_pool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+    elif const.CURR_MODEL == 'attention':
+        model = Xception()
 
     if const.RUN_ON_GPU:
         if const.CONTINUE_FROM is not None:

@@ -1,13 +1,21 @@
 import torch
 import torch.nn as nn
-
+from cnn_finetune import make_model
 import const
 from dataset import ImageDataset, load_data
 from util import GAP
 from test import inference, generate_submission
 
+def calculateDELF():
+    pass
 def rerank(predicts, confs, targets):
     pass
+    #for each prediction:
+    #get 30 random images from that class
+    #extract delf features from those images and selected image
+    #get avg/median(?) similarity score between image delf and  the 30 known class delfs
+    #set confidence = weighted average (beta * conf) + (1-beta)*similarity
+    #TODO advanced version: if new confidence is below certain threshold, change predicted label to next in list
 
 # def eval_reranking():
 if __name__=="__main__":

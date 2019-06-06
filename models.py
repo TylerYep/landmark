@@ -14,6 +14,7 @@ class Xception(nn.Module):
         self.xception._classifier = None
         self.bilinearpool = CompactBilinearPooling(10, 10, 8192)
         self.spatial = SpatialAttn()
+        self.linear = nn.Linear(100, n_classes)
 
     def forward(self, input):
         b, h, w, c = input.shape    # in = (b, 3, 299, 299)
@@ -22,6 +23,8 @@ class Xception(nn.Module):
         x = self.bilinearpool(x)    # out=(b, 8192)
         x = x.reshape((b, c, h, w)) # out=(b, 2048, 10, 10)
         x = self.spatial(x)         # out=(b, 1, 10, 10)
+        x = x.reshape((b, -1)) #out=(b, 100) #flatten for fc
+        x = self.linear(x)
         return x
 
 if __name__ == '__main__':
