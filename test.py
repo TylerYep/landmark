@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 import const
 from dataset import load_test_data
+from models import Xception
 
 def inference(data_loader, model) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
     ''' Returns predictions and targets, if any. '''
@@ -77,6 +78,9 @@ if __name__ == '__main__':
         model = torchvision.models.resnet50(pretrained=True)
         model.avg_pool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, const.NUM_CLASSES)
+
+    elif const.CURR_MODEL == 'attention':
+        model = Xception(num_classes)
 
     if const.RUN_ON_GPU:
         model.load_state_dict(torch.load(const.CONTINUE_FROM))
