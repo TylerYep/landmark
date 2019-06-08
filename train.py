@@ -18,7 +18,7 @@ from tqdm import tqdm
 import const
 from dataset import ImageDataset, load_data
 from util import AverageMeter, GAP
-from models import Exception
+from models import Xception
 
 def train(model, train_loader, dev_loader):
     global_start_time = time.time()
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     elif const.CURR_MODEL == 'attention':
-        model = Xception()
+        model = Xception(num_classes)
 
     if const.RUN_ON_GPU:
         if const.CONTINUE_FROM is not None:
