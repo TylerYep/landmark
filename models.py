@@ -14,13 +14,13 @@ class Reshape(nn.Module):
 
 class SelfAttnClassifier(nn.Module):
     def __init__(self, in_features=2048, num_classes=const.NUM_CLASSES):
-        super(CustomClassifier, self).__init__()
-        self.attention = SelfAttn()
-        self.linear = nn.Linear(4096, num_classes)
+        super(SelfAttnClassifier, self).__init__()
+        self.attention = SelfAttn(32, 1) #in_channels, activation
+        self.linear = nn.Linear(2048, num_classes)
     def forward(self, x):
         b, f = x.shape #(batch_size, 2048) from xception
         x = x.view(b, 32, 8, 8) #reshape for attention (b, c, h, w)
-        x = attention(x) #out: (b, h*w, h*w) = (b, 64, 64)
+        x = self.attention(x) #out: (b, h*w, h*w) = (b, 64, 64)
         x = x.view(b, -1)
         x = self.linear(x) #out: (b)
         return x   
