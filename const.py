@@ -1,7 +1,7 @@
 RUN_ON_GPU = True
-RUN_ID = 'pool_100'
-CONTINUE_FROM = f'save/{RUN_ID}/weights_395000.0.pth'
-#CONTINUE_FROM = None
+RUN_ID = 'selfattn'
+#CONTINUE_FROM = f'save/{RUN_ID}/weights_395000.0.pth'
+CONTINUE_FROM = None
 LAST_SAVE = 0
 MODELS = ('xception', 'resnet50','attention')
 CURR_MODEL = MODELS[2]

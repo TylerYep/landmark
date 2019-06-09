@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from cnn_finetune import make_model
 import const
-from layers import CompactBilinearPooling, SpatialAttn
+from layers import CompactBilinearPooling, SpatialAttn, SelfAttn
 
 class Reshape(nn.Module):
     def __init__(self, *args):
@@ -12,6 +12,18 @@ class Reshape(nn.Module):
     def forward(self, x):
         return x.view(self.shape)
 
+class SelfAttnClassifier(nn.Module):
+    def __init__(self, in_features=2048, num_classes=const.NUM_CLASSES):
+        super(CustomClassifier, self).__init__()
+        self.attention = SelfAttn()
+        self.linear = nn.Linear(4096, num_classes)
+    def forward(self, x):
+        b, f = x.shape #(batch_size, 2048) from xception
+        x = x.view(b, 32, 8, 8) #reshape for attention (b, c, h, w)
+        x = attention(x) #out: (b, h*w, h*w) = (b, 64, 64)
+        x = x.view(b, -1)
+        x = self.linear(x) #out: (b)
+        return x   
 class CustomClassifier(nn.Module):
     def __init__(self, in_features=2048, num_classes=const.NUM_CLASSES):
         super(CustomClassifier, self).__init__()
@@ -35,8 +47,9 @@ class Xception(nn.Module):
         super().__init__()
          
         def make_classifier(in_features, num_classes):
-            return CustomClassifier(in_features, num_classes)
-        
+            #return CustomClassifier(in_features, num_classes)
+            return SelfAttnClassifier(in_features, num_classes)
+
         self.xception = make_model('xception', num_classes=num_classes, pretrained=True,
                                    pool=nn.AdaptiveMaxPool2d(1), classifier_factory=make_classifier)
         #print(self.xception)
