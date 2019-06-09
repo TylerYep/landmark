@@ -15,14 +15,14 @@ class SpatialAttn(nn.Module):
         #x /= torch.sum(x, dim=0)
         #x = x.view(batch_size, 1, h, w)
         #return x
-    def forward(self, x):
-        batch_size, _, h, w = x.shape
-        input_ = x
-        x = torch.sum(x, dim=1)
+
+    def forward(self, inputs):
+        batch_size, _, h, w = inputs.shape
+        x = torch.sum(inputs, dim=1)
         x = x.view(batch_size, -1)
         x = f.softmax(x, dim=-1)
         x = x.view(batch_size, 1, h, w)
-        x = input_ * x
+        x = inputs * x
         return x
 
 
