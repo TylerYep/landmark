@@ -33,16 +33,16 @@ class CustomClassifier(nn.Module):
 
         self.attn_dim = 16
         self.bilinearpool = CompactBilinearPooling(in_features, in_features, 8192)
-        #self.spatial = SpatialAttn()
-        #self.linear = nn.Linear(self.attn_dim **2, num_classes)
+        self.spatial = SpatialAttn()
+        self.linear = nn.Linear(self.attn_dim **2, num_classes)
         self.linear = nn.Linear(8192, num_classes)
 
     def forward(self, x):
         b, f = x.shape #(batch_size, 2048) from xception
         x = self.bilinearpool(x) #in: (b, 2048), out: (b, 8192)
-        #x = x.view(b, -1, self.attn_dim, self.attn_dim) #out: (b, 8, 32, 32)
-        #x = self.spatial(x) #out: (b, 32*32) = (b, 1024)
-        #x = x.view(b, -1) #out: (b*1024)
+        x = x.view(b, -1, self.attn_dim, self.attn_dim) #out: (b, 8, 32, 32)
+        x = self.spatial(x) #out: (b, 32*32) = (b, 1024)
+        x = x.view(b, -1) #out: (b*1024)
         x = self.linear(x) #out: (b)
         return x
 
@@ -51,8 +51,8 @@ class Xception(nn.Module):
         super().__init__()
 
         def make_classifier(in_features, num_classes):
-            #return CustomClassifier(in_features, num_classes)
-            return SelfAttnClassifier(in_features, num_classes)
+            return CustomClassifier(in_features, num_classes)
+            # return SelfAttnClassifier(in_features, num_classes)
 
         self.xception = make_model('xception', num_classes=num_classes, pretrained=True,
                                    pool=nn.AdaptiveMaxPool2d(1), classifier_factory=make_classifier)
