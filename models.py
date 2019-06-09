@@ -7,52 +7,62 @@ from layers import CompactBilinearPooling, SpatialAttn, SelfAttn
 
 class Reshape(nn.Module):
     def __init__(self, *args):
-        super(Reshape, self).__init__()
+        super().__init__()
         self.shape = args
+
     def forward(self, x):
         return x.view(self.shape)
 
 class SelfAttnClassifier(nn.Module):
     def __init__(self, in_features=2048, num_classes=const.NUM_CLASSES):
-        super(SelfAttnClassifier, self).__init__()
+        super().__init__()
         self.attention = SelfAttn(32, 1) #in_channels, activation
         self.linear = nn.Linear(2048, num_classes)
+
     def forward(self, x):
         b, f = x.shape #(batch_size, 2048) from xception
         x = x.view(b, 32, 8, 8) #reshape for attention (b, c, h, w)
         x = self.attention(x) #out: (b, h*w, h*w) = (b, 64, 64)
         x = x.view(b, -1)
         x = self.linear(x) #out: (b)
-        return x   
+        return x
+
 class CustomClassifier(nn.Module):
     def __init__(self, in_features=2048, num_classes=const.NUM_CLASSES):
-        super(CustomClassifier, self).__init__()
-    
+        super().__init__()
+
         self.attn_dim = 16
-        self.bilinearpool = CompactBilinearPooling(in_features, in_features, 8192) 
+        self.bilinearpool = CompactBilinearPooling(in_features, in_features, 8192)
         #self.spatial = SpatialAttn()
         #self.linear = nn.Linear(self.attn_dim **2, num_classes)
         self.linear = nn.Linear(8192, num_classes)
+
     def forward(self, x):
         b, f = x.shape #(batch_size, 2048) from xception
         x = self.bilinearpool(x) #in: (b, 2048), out: (b, 8192)
-        #x = x.view(b, -1, self.attn_dim, self.attn_dim) #out: (b, 8, 32, 32) 
+        #x = x.view(b, -1, self.attn_dim, self.attn_dim) #out: (b, 8, 32, 32)
         #x = self.spatial(x) #out: (b, 32*32) = (b, 1024)
         #x = x.view(b, -1) #out: (b*1024)
         x = self.linear(x) #out: (b)
-        return x   
- 
+        return x
+
 class Xception(nn.Module):
     def __init__(self, num_classes=const.NUM_CLASSES):
         super().__init__()
-         
+
         def make_classifier(in_features, num_classes):
             #return CustomClassifier(in_features, num_classes)
             return SelfAttnClassifier(in_features, num_classes)
 
         self.xception = make_model('xception', num_classes=num_classes, pretrained=True,
                                    pool=nn.AdaptiveMaxPool2d(1), classifier_factory=make_classifier)
-        #print(self.xception)
+        c = 0
+        for layer in self.xception.parameters():
+            if c < 85:
+                layer.requires_grad = False
+            else:
+                layer.requires_grad = True
+            c += 1
         #self.xception._classifier = None
         #self.bilinearpool = CompactBilinearPooling(10, 10, 8192)
         #self.spatial = SpatialAttn()

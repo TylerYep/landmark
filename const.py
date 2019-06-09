@@ -18,8 +18,6 @@ else:
     TRAIN_CSV = DATA_PATH + 'train-subset.csv'
 
 LEARNING_RATE = 3e-4
-# LR_STEP = 3
-# LR_FACTOR = 0.5
 MAX_STEPS_PER_EPOCH = 15000
 NUM_EPOCHS = 500
 LOG_FREQ = 5000

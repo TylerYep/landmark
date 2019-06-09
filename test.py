@@ -46,6 +46,7 @@ def inference(data_loader, model) -> Tuple[torch.Tensor, torch.Tensor, Optional[
 
     return predicts, confs, targets
 
+
 def generate_submission(test_loader, model, label_encoder) -> np.ndarray:
     sample_sub = pd.read_csv('data/sample_submission.csv')
 

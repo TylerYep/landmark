@@ -8,6 +8,7 @@ from test import inference, generate_submission
 
 def calculateDELF():
     pass
+
 def rerank(predicts, confs, targets):
     pass
     #for each prediction:
