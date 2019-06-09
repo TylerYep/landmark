@@ -1,29 +1,31 @@
 RUN_ON_GPU = True
-RUN_ID = 'B'
-CONTINUE_FROM = f'save/{RUN_ID}weights_111000.pth'
-LAST_SAVE = 111000
-MODELS = ('xception', 'resnet50')
-CURR_MODEL = MODELS[0]
+RUN_ID = 'pool_100'
+CONTINUE_FROM = f'save/{RUN_ID}/weights_395000.0.pth'
+#CONTINUE_FROM = None
+LAST_SAVE = 0
+MODELS = ('xception', 'resnet50','attention')
+CURR_MODEL = MODELS[2]
 
 NUM_CLASSES = 6512
+DATA_PATH = 'data/'
 if RUN_ON_GPU:
     MIN_SAMPLES_PER_CLASS = 100
-    BATCH_SIZE = 64
+    BATCH_SIZE = 16
+    TRAIN_CSV = DATA_PATH + 'train.csv'
 else:
     MIN_SAMPLES_PER_CLASS = 0
     BATCH_SIZE = 4
+    TRAIN_CSV = DATA_PATH + 'train-subset.csv'
 
 LEARNING_RATE = 3e-4
 # LR_STEP = 3
 # LR_FACTOR = 0.5
 MAX_STEPS_PER_EPOCH = 15000
 NUM_EPOCHS = 500
-LOG_FREQ = 500
+LOG_FREQ = 5000
 PLT_FREQ = 100
 NUM_TOP_PREDICTS = 20
 
 INPUT_SHAPE = (299, 299)
-DATA_PATH = 'data/'
-TRAIN_CSV = DATA_PATH + 'train-subset.csv'
 DEV_CSV = DATA_PATH + 'dev.csv'
 TEST_CSV = DATA_PATH + 'test.csv'

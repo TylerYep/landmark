@@ -80,7 +80,7 @@ if __name__ == '__main__':
         model.fc = nn.Linear(model.fc.in_features, const.NUM_CLASSES)
 
     elif const.CURR_MODEL == 'attention':
-        model = Xception(num_classes)
+        model = Xception(const.NUM_CLASSES)
 
     if const.RUN_ON_GPU:
         model.load_state_dict(torch.load(const.CONTINUE_FROM))

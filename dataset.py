@@ -124,3 +124,6 @@ def load_test_data() -> 'DataLoader[np.ndarray]':
     test_loader = DataLoader(test_dataset, batch_size=const.BATCH_SIZE,
                              shuffle=False, num_workers=multiprocessing.cpu_count())
     return test_loader
+
+if __name__ == "__main__":
+    load_data()
