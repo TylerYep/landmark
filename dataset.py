@@ -44,18 +44,23 @@ class ImageDataset(Dataset):
         filename = self.df.id.values[index]
 
         folder = 'test' if self.mode == 'test' else 'train'
+        while not os.path.exists(f'data/images/{folder}/{filename}.jpg'):
+            index += 1
+            filename = self.df.id.values[index]
+
         sample = Image.open(f'data/images/{folder}/{filename}.jpg')
         while sample.mode != 'RGB':
             index += 1
             filename = self.df.id.values[index]
             sample = Image.open(f'data/images/{folder}/{filename}.jpg')
 
-        image = self.transforms(sample)
+        # image = self.transforms(sample)
 
-        if self.mode == 'test':
-            return image
-        else:
-            return image, self.df.landmark_id.values[index]
+        # if self.mode == 'test':
+        #     return image
+        # else:
+        #     return image, self.df.landmark_id.values[index]
+        return f'data/images/{folder}/{filename}.jpg', self.df.landmark_id.values[index]
 
     def __len__(self):
         return self.df.shape[0]
@@ -93,17 +98,17 @@ def load_data() -> 'Tuple[DataLoader[np.ndarray], DataLoader[np.ndarray], LabelE
     assert len(label_encoder.classes_) == num_classes
 
     train_df.landmark_id = label_encoder.transform(train_df.landmark_id)
-    dev_df.landmark_id = label_encoder.transform(dev_df.landmark_id)
+    # dev_df.landmark_id = label_encoder.transform(dev_df.landmark_id)
 
     train_dataset = ImageDataset(train_df, mode='train')
     train_loader = DataLoader(train_dataset, batch_size=const.BATCH_SIZE,
                               shuffle=True, num_workers=multiprocessing.cpu_count(), drop_last=True)
 
-    dev_dataset = ImageDataset(dev_df, mode='val')
-    dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,
-                             shuffle=False, num_workers=multiprocessing.cpu_count())
+    # dev_dataset = ImageDataset(dev_df, mode='val')
+    # dev_loader = DataLoader(dev_dataset, batch_size=const.BATCH_SIZE,
+    #                          shuffle=False, num_workers=multiprocessing.cpu_count())
 
-    return train_loader, dev_loader, label_encoder, num_classes
+    return train_dataset,  num_classes # train_loader, dev_loader, label_encoder, num_classes
 
 
 def load_test_data() -> 'DataLoader[np.ndarray]':

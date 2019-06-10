@@ -1,9 +1,8 @@
-RUN_ON_GPU = True
-RUN_ID = 'selfattn'
-#CONTINUE_FROM = f'save/{RUN_ID}/weights_395000.0.pth'
-CONTINUE_FROM = None
+RUN_ON_GPU = False
+RUN_ID = ''
+CONTINUE_FROM = 'save/weights_58500.pth'
 LAST_SAVE = 0
-MODELS = ('xception', 'resnet50','attention')
+MODELS = ('xception', 'resnet50', 'attention')
 CURR_MODEL = MODELS[2]
 
 NUM_CLASSES = 6512
