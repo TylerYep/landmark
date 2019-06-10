@@ -1,9 +1,9 @@
-RUN_ON_GPU = False
+RUN_ON_GPU = True
 RUN_ID = ''
-CONTINUE_FROM = 'save/weights_58500.pth'
+CONTINUE_FROM = 'save/B/weights_109500.pth'
 LAST_SAVE = 0
 MODELS = ('xception', 'resnet50', 'attention')
-CURR_MODEL = MODELS[2]
+CURR_MODEL = MODELS[0]
 
 NUM_CLASSES = 6512
 DATA_PATH = 'data/'

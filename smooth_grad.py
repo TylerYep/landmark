@@ -47,9 +47,8 @@ def generate_smooth_grad(Backprop, prep_img, target_class, param_n, param_sigma_
 
 if __name__ == '__main__':
     # Get params
-    target_example = 0  # Snake
     (original_image, prep_img, target_class, file_name_to_export, pretrained_model) =\
-        get_example_params(target_example)
+        get_example_params()
 
     VBP = VanillaBackprop(pretrained_model)
     # GBP = GuidedBackprop(pretrained_model)  # if you want to use GBP dont forget to

@@ -116,9 +116,8 @@ class InvertedRepresentation():
 
 if __name__ == '__main__':
     # Get params
-    target_example = 0
     (original_image, prep_img, target_class, file_name_to_export, pretrained_model) =\
-        get_example_params(target_example)
+        get_example_params()
 
     inverted_representation = InvertedRepresentation(pretrained_model)
     image_size = (66, 200)# 224  # width & height

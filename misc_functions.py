@@ -210,7 +210,7 @@ def get_positive_negative_saliency(gradient):
     return pos_saliency, neg_saliency
 
 
-def get_example_params(example_index):
+def get_example_params(example_index=9):
     """
         Gets used variables for almost all visualizations, like the image, model etc.
 
@@ -237,7 +237,7 @@ def get_example_params(example_index):
     # pretrained_model.features = [pretrained_model.conv1, pretrained_model.conv2, pretrained_model.conv3, pretrained_model.conv4, pretrained_model.conv5]
     pretrained_model = make_model('xception', num_classes=const.NUM_CLASSES, pretrained=True,
                        pool=nn.AdaptiveAvgPool2d(1))
-    pretrained_model.load_state_dict(torch.load(const.CONTINUE_FROM, map_location=lambda storage, loc: storage))
+    pretrained_model.load_state_dict(torch.load(const.CONTINUE_FROM))
 
     return (original_image,
             prep_img,

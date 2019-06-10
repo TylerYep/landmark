@@ -25,7 +25,7 @@ class VanillaBackprop():
             self.gradients = grad_in[0]
 
         # Register hook to the first layer
-        first_layer = list(self.model.features._modules.items())[0][1]
+        first_layer = list(self.model._features._modules.items())[0][1]
         first_layer.register_backward_hook(hook_function)
 
     def generate_gradients(self, input_image, target_class):
@@ -46,8 +46,7 @@ class VanillaBackprop():
 
 if __name__ == '__main__':
     # Get params
-    target_example = 0  # Snake
-    (original_image, prep_img, target_class, file_name_to_export, pretrained_model) = get_example_params(target_example)
+    (original_image, prep_img, target_class, file_name_to_export, pretrained_model) = get_example_params()
     # Vanilla backprop
     VBP = VanillaBackprop(pretrained_model)
     # Generate gradients
