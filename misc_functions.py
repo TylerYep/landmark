@@ -1,3 +1,4 @@
+EX = 9
 """
 Created on Thu Oct 21 11:09:09 2017
 
@@ -210,7 +211,7 @@ def get_positive_negative_saliency(gradient):
     return pos_saliency, neg_saliency
 
 
-def get_example_params(example_index=9):
+def get_example_params(example_index=EX):
     """
         Gets used variables for almost all visualizations, like the image, model etc.
 

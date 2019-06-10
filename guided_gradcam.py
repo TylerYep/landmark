@@ -27,7 +27,7 @@ def guided_grad_cam(grad_cam_mask, guided_backprop_mask):
 
 if __name__ == '__main__':
     # Get params
-    (original_image, prep_img, target_class, file_name_to_export, pretrained_model) = get_example_params(7)
+    original_image, prep_img, target_class, file_name_to_export, pretrained_model = get_example_params()
 
     # Grad cam
     gcv2 = GradCam(pretrained_model, target_layer=11)
