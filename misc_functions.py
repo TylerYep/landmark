@@ -12,6 +12,7 @@ import matplotlib.cm as mpl_color_map
 
 import torch
 import torch.nn as nn
+from shutil import copy
 
 from torch.autograd import Variable
 from torchvision import models
@@ -228,8 +229,9 @@ def get_example_params(example_index=EX):
     # Pick one of the examples
     train_dataset, num_classes = load_data()
     img_path, target_class = train_dataset[example_index]
-
     file_name_to_export = img_path[img_path.rfind('/')+1:img_path.rfind('.')]
+    copyfile(img_path, '../results/')
+
     # Read image
     original_image = Image.open(img_path).convert('RGB')
     # Process image
